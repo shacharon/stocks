@@ -26,11 +26,13 @@
     "db:migrate": "pnpm --filter database prisma:migrate",
     "db:studio": "pnpm --filter database prisma:studio",
     "db:seed": "pnpm --filter database prisma:seed",
-    "docker:up": "docker-compose -f infrastructure/docker-compose.yml up -d",
-    "docker:down": "docker-compose -f infrastructure/docker-compose.yml down",
-    "docker:logs": "docker-compose -f infrastructure/docker-compose.yml logs -f",
+    "dev:up": "docker compose -f infrastructure/docker-compose.yml up -d",
+    "dev:down": "docker compose -f infrastructure/docker-compose.yml down",
+    "dev:logs": "docker compose -f infrastructure/docker-compose.yml logs -f",
+    "dev:ps": "docker compose -f infrastructure/docker-compose.yml ps",
     "clean": "pnpm -r exec rm -rf dist node_modules .next",
-    "typecheck": "pnpm -r exec tsc --noEmit"
+    "typecheck": "pnpm -r exec tsc --noEmit",
+    "check:pnpm": "node -e \"try{require('child_process').execSync('pnpm --version',{stdio:'ignore'});console.log('✓ pnpm is installed')}catch(e){console.log('✗ pnpm is NOT installed. Run: npm install -g pnpm@8.15.0');process.exit(1)}\""
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

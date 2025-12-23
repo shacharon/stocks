@@ -36,7 +36,8 @@ Read these in order:
 ## 🎯 Current Status
 
 ✅ **Baby Step 1 Complete** - Monorepo structure created  
-⚪ **Baby Step 2 Ready** - Docker infrastructure (Postgres + Redis)
+✅ **Baby Step 2 Complete** - Docker infrastructure (Postgres + Redis)  
+⚪ **Baby Step 3 Ready** - Prisma schema (6 core tables)
 
 ---
 
