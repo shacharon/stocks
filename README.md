@@ -10,20 +10,24 @@
 
 ### 📖 Start Here (Read in Order)
 
-1. **[PROJECT-STARTUP.md](PROJECT-STARTUP.md)** ⭐ **READ FIRST**
-   - Complete project overview
-   - System architecture
+1. **[docs/PROJECT-STATUS.md](docs/PROJECT-STATUS.md)** ⭐ **READ FIRST**
+   - Current progress (40% complete)
+   - What's done vs. what's pending
+   - System capabilities
+   - Next steps
+
+2. **[docs/project-startup-guide.md](docs/project-startup-guide.md)** ⭐ **ARCHITECTURE GUIDE**
+   - Complete system architecture
    - Database design (13 tables)
    - Technology stack
    - Repository structure
 
-2. **[BABY-STEPS.md](BABY-STEPS.md)** ⭐ **IMPLEMENTATION GUIDE**
+3. **[docs/baby-steps-roadmap.md](docs/baby-steps-roadmap.md)** ⭐ **IMPLEMENTATION PLAN**
    - Step-by-step implementation plan
-   - 10 initial baby steps with pause points
-   - Acceptance criteria for each step
+   - 10 baby steps with acceptance criteria
    - Decision log
 
-3. **This README** — Quick reference and status tracker
+4. **This README** — Quick reference and overview
 
 ---
 
@@ -162,15 +166,15 @@ Pipeline Complete (Data ready for Web UI)
 
 | Phase | Status | Steps Completed |
 |-------|--------|-----------------|
-| **Phase 0**: Foundation | 🔵 Ready | 0/4 |
+| **Phase 0**: Foundation | 🟢 In Progress | 4/10 (40%) |
 | **Phase 1**: Worker Bootstrap | ⚪ Not Started | 0/6 |
 | **Phase 2**: Market Sync | ⚪ Planned | 0/5 |
 | **Phase 3**: Feature Factory | ⚪ Planned | 0/10 |
 | **Phase 4**: Web App | ⚪ Planned | 0/4 |
 | **Phase 5+**: Advanced Modules | ⚪ Planned | — |
 
-**Current Baby Step**: 1 of 10 (Foundation)  
-**Next Milestone**: End of Phase 1 (Step 10)
+**Current Baby Step**: 4 of 10 complete (40%) ✅  
+**Next**: Baby Step 5 - Worker NestJS Bootstrap
 
 ---
 
@@ -244,19 +248,26 @@ test('same inputs produce same outputs', async () => {
 
 ## 📚 Documentation Map
 
-### Core Documents (Created)
-- ✅ [README.md](README.md) — This file
-- ✅ [PROJECT-STARTUP.md](PROJECT-STARTUP.md) — Complete project guide
-- ✅ [BABY-STEPS.md](BABY-STEPS.md) — Implementation roadmap
+### Core Documents (Created) ✅
+- [README.md](README.md) — This file (overview)
+- [docs/PROJECT-STATUS.md](docs/PROJECT-STATUS.md) — Current progress & status
+- [docs/project-startup-guide.md](docs/project-startup-guide.md) — Complete architecture
+- [docs/baby-steps-roadmap.md](docs/baby-steps-roadmap.md) — Implementation plan
+- [docs/installation-guide.md](docs/installation-guide.md) — Setup instructions
+- [docs/README.md](docs/README.md) — Documentation index
 
-### Documents to Create (Future)
-- [ ] docs/ARCHITECTURE.md — System design deep-dive
-- [ ] docs/DATABASE.md — Schema documentation
-- [ ] docs/MODULES.md — Module specifications
-- [ ] docs/API.md — API reference
-- [ ] docs/JOBS.md — Job pipeline documentation
-- [ ] docs/TESTING.md — Testing guide
-- [ ] docs/DEPLOYMENT.md — AWS deployment guide
+### Baby Steps Completed (4/10) ✅
+- [docs/baby-steps/step-1-monorepo-foundation.md](docs/baby-steps/step-1-monorepo-foundation.md)
+- [docs/baby-steps/step-2-docker-infrastructure.md](docs/baby-steps/step-2-docker-infrastructure.md)
+- [docs/baby-steps/step-3-prisma-schema.md](docs/baby-steps/step-3-prisma-schema.md)
+- [docs/baby-steps/step-4-shared-contracts.md](docs/baby-steps/step-4-shared-contracts.md)
+
+### Documents to Create (Future) ⚪
+- [ ] API reference documentation
+- [ ] Module specifications
+- [ ] Job pipeline documentation
+- [ ] Testing guide
+- [ ] AWS deployment guide
 
 ---
 
