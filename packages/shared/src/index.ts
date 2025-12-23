@@ -9,19 +9,26 @@
  * Used by both web and worker applications for type safety.
  */
 
-// Export placeholder - will be populated in Baby Step 5
 export const SHARED_VERSION = '0.1.0';
 
-// Contracts will be exported here
-// export * from './contracts/portfolio';
-// export * from './contracts/market';
-// export * from './contracts/analysis';
-// export * from './contracts/jobs';
+// ============================================================================
+// Enums
+// ============================================================================
+export * from './contracts/enums';
 
-// Schemas will be exported here
-// export * from './schemas/portfolio.schema';
-// export * from './schemas/market.schema';
+// ============================================================================
+// Contracts
+// ============================================================================
+export * from './contracts/portfolio';
+export * from './contracts/market';
+export * from './contracts/analysis';
+export * from './contracts/jobs';
+export * from './contracts/universe';
 
-// Types will be exported here
-// export * from './types';
+// ============================================================================
+// Validation Schemas
+// ============================================================================
+export * from './schemas/portfolio.schema';
+export * from './schemas/universe.schema';
+export * from './schemas/analysis.schema';
 
