@@ -1,0 +1,52 @@
+{
+  "name": "stocks",
+  "version": "0.1.0",
+  "private": true,
+  "description": "EOD Stock Analyzer - Deterministic stock analysis system with AWS microservices",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/stocks.git"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "scripts": {
+    "dev:worker": "pnpm --filter worker dev",
+    "dev:web": "pnpm --filter web dev",
+    "build": "pnpm -r build",
+    "build:worker": "pnpm --filter worker build",
+    "build:web": "pnpm --filter web build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "db:generate": "pnpm --filter database prisma:generate",
+    "db:migrate": "pnpm --filter database prisma:migrate",
+    "db:studio": "pnpm --filter database prisma:studio",
+    "db:seed": "pnpm --filter database prisma:seed",
+    "docker:up": "docker-compose -f infrastructure/docker-compose.yml up -d",
+    "docker:down": "docker-compose -f infrastructure/docker-compose.yml down",
+    "docker:logs": "docker-compose -f infrastructure/docker-compose.yml logs -f",
+    "clean": "pnpm -r exec rm -rf dist node_modules .next",
+    "typecheck": "pnpm -r exec tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "prettier": "^3.2.4",
+    "typescript": "^5.3.3"
+  },
+  "keywords": [
+    "stock-analysis",
+    "eod",
+    "aws",
+    "microservices",
+    "nestjs",
+    "nextjs",
+    "prisma"
+  ],
+  "author": "",
+  "license": "UNLICENSED"
+}
+
