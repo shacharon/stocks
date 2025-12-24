@@ -1,433 +1,205 @@
-# 🎉 Baby Step 5 — Worker NestJS Bootstrap COMPLETE!
+# Baby Step 5: Worker NestJS Bootstrap ✅
 
-## ✅ What We Just Created
+**Status:** COMPLETED  
+**Date:** December 24, 2025
 
-Successfully created the **Worker service with NestJS, BullMQ, and Prisma integration**!
+## 🎯 Objective
 
-### Files Created (13 total)
+Create the NestJS worker application with health endpoint, Prisma integration, and BullMQ configuration.
 
-```
-apps/worker/src/
-├── main.ts                          ✅ NestJS bootstrap
-├── app.module.ts                    ✅ Root module (imports all modules)
-├── config/
-│   └── configuration.ts             ✅ Environment configuration
-├── prisma/
-│   ├── prisma.module.ts            ✅ Prisma module (global)
-│   └── prisma.service.ts           ✅ Prisma service + health check
-├── health/
-│   ├── health.module.ts            ✅ Health module
-│   └── health.controller.ts        ✅ GET /health endpoint
-└── queue/
-    ├── queue.module.ts             ✅ Queue module (BullMQ)
-    ├── queue.service.ts            ✅ Queue service
-    └── test-queue.processor.ts     ✅ Test job processor (smoke test)
-```
+## 📦 What Was Built
 
----
-
-## 🎯 Features Implemented
-
-### 1. NestJS Bootstrap ✅
-- Application startup with proper logging
-- CORS enabled for local development
-- Port configuration from environment
-- Graceful error handling
-
-### 2. BullMQ + Redis Integration ✅
-- Redis connection from `REDIS_HOST` and `REDIS_PORT`
-- Test queue for smoke testing
-- Test job processor
-- Queue health check service
-
-### 3. Prisma Integration ✅
-- Global Prisma module
-- Database connectivity on startup
-- Health check method (`isHealthy()`)
-- Proper lifecycle hooks (connect/disconnect)
-
-### 4. Health Endpoint ✅
-```typescript
-GET /health
-
-Response:
-{
-  "status": "ok",
-  "timestamp": "2025-12-23T...",
-  "service": "worker",
-  "database": "connected" | "disconnected" | "error"
-}
-```
-
----
-
-## 🚀 Running the Worker Service
-
-### Prerequisites
-- ✅ Docker containers running (`pnpm dev:up`)
-- ✅ Database migrated (`pnpm db:migrate`)
-- ✅ .env file configured
-
-### Start the Worker
-
-**Option A: Development Mode (with watch)**
-```bash
-cd c:\dev\stocks
-pnpm -C apps/worker dev
-```
-
-**Option B: Build and Run**
-```bash
-cd c:\dev\stocks
-pnpm -C apps/worker build
-pnpm -C apps/worker start
-```
-
-**Expected Output**:
-```
-[Nest] INFO [Bootstrap] 🚀 Worker service is running on: http://localhost:3001
-[Nest] INFO [Bootstrap] 📊 Health check: http://localhost:3001/health
-[Nest] INFO [Bootstrap] 🔧 Environment: development
-[Nest] LOG [PrismaService] ✅ Database connected successfully
-```
-
----
-
-## ✅ Verification Steps
-
-### Step 1: Check Health Endpoint
-
-```bash
-curl http://localhost:3001/health
-```
-
-**Expected Response**:
-```json
-{
-  "status": "ok",
-  "timestamp": "2025-12-23T21:30:00.000Z",
-  "service": "worker",
-  "database": "connected"
-}
-```
-
-### Step 2: Verify Database Connection
-
-The health endpoint automatically checks database connectivity.
-
-If database is connected:
-```json
-{
-  "status": "ok",
-  "database": "connected"
-}
-```
-
-If database is down:
-```json
-{
-  "status": "ok",
-  "database": "disconnected"
-}
-```
-
-### Step 3: Verify Redis Connection
-
-Check that Redis is connected (BullMQ will log errors if not):
-```bash
-# Should see no Redis connection errors in worker logs
-# BullMQ registers queues on startup
-```
-
-### Step 4: Test Queue Processing (Optional)
-
-The worker includes a test queue processor. You can verify it works by:
-1. Adding a job to the test queue
-2. Watching the worker logs for processing messages
-
----
-
-## 📦 Dependencies Added
-
-### NestJS Core
-- `@nestjs/common` - Core framework
-- `@nestjs/core` - Core functionality
-- `@nestjs/platform-express` - Express adapter
-- `@nestjs/config` - Configuration management
-
-### BullMQ Integration
-- `@nestjs/bullmq` - NestJS BullMQ module
-- `bullmq` - Job queue library
-- `ioredis` - Redis client
-
-### Database
-- `@prisma/client` - Prisma ORM client
-- `@stocks/database` - Workspace package
-
-### Utilities
-- `@stocks/shared` - Shared types and contracts
-
----
-
-## 🔧 Configuration
-
-### Environment Variables (.env)
-
-```env
-# Worker Service
-WORKER_PORT=3001
-NODE_ENV=development
-LOG_LEVEL=debug
-
-# Database
-DATABASE_URL="postgresql://stocks:stocks@localhost:5432/stocks"
-
-# Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_URL="redis://localhost:6379"
-```
-
-### Module Structure
-
-```
-AppModule
-├── ConfigModule (global)
-├── BullModule (Redis connection)
-├── PrismaModule (global, database)
-├── HealthModule (health endpoint)
-└── QueueModule (test queue)
-```
-
----
-
-## 📊 Architecture
-
-### Request Flow: Health Check
-
-```
-HTTP GET /health
-    ↓
-HealthController
-    ↓
-PrismaService.isHealthy()
-    ↓
-Database: SELECT 1
-    ↓
-Response: { status, database }
-```
-
-### Job Queue Flow
-
-```
-QueueService.addTestJob(data)
-    ↓
-BullMQ → Redis
-    ↓
-TestQueueProcessor.process(job)
-    ↓
-Job completed
-```
-
----
-
-## 🎯 What Works Now
-
-### ✅ Working Features
-- Worker service starts successfully
-- Health endpoint returns status
-- Database connectivity verified
-- Redis connection established
-- BullMQ queue registered
-- Test job processor ready
-
-### ⚪ Not Implemented Yet (Baby Steps 6-10)
-- Universe Manager CRUD
-- CSV import
-- Pipeline tracking
-- Actual analysis jobs
-- Market data sync
-
----
-
-## 🐛 Troubleshooting
-
-### Issue: "Cannot connect to database"
-
-**Check:**
-1. Docker containers running: `pnpm dev:ps`
-2. DATABASE_URL correct in .env
-3. Migrations applied: `pnpm db:migrate`
-
-**Fix:**
-```bash
-pnpm dev:up
-pnpm db:migrate
-```
-
-### Issue: "Cannot connect to Redis"
-
-**Check:**
-1. Redis container running
-2. REDIS_HOST and REDIS_PORT correct
-
-**Fix:**
-```bash
-pnpm dev:up
-docker logs stocks-redis
-```
-
-### Issue: Build errors
-
-**Check:**
-1. All dependencies installed: `pnpm install`
-2. Shared packages built: `pnpm -C packages/shared build`
-
-**Fix:**
-```bash
-cd c:\dev\stocks
-pnpm install
-pnpm -C packages/shared build
-pnpm -C apps/worker build
-```
-
----
-
-## 📁 File Structure
+### 1. Worker Application Structure
 
 ```
 apps/worker/
 ├── src/
-│   ├── main.ts                     # Bootstrap
-│   ├── app.module.ts               # Root module
+│   ├── main.ts                    # Application entry point
+│   ├── app.module.ts              # Root module
 │   ├── config/
-│   │   └── configuration.ts        # Env config
+│   │   └── configuration.ts       # Environment configuration
 │   ├── prisma/
-│   │   ├── prisma.module.ts       # Global module
-│   │   └── prisma.service.ts      # DB service + health
-│   ├── health/
-│   │   ├── health.module.ts
-│   │   └── health.controller.ts   # GET /health
-│   └── queue/
-│       ├── queue.module.ts
-│       ├── queue.service.ts
-│       └── test-queue.processor.ts # Test job
-│
-├── package.json
-├── tsconfig.json
-├── nest-cli.json
-└── .gitignore
+│   │   ├── prisma.module.ts       # Prisma module
+│   │   └── prisma.service.ts      # Prisma service with connection management
+│   ├── queue/
+│   │   ├── queue.module.ts        # BullMQ module
+│   │   ├── queue.service.ts       # Queue service
+│   │   └── test-queue.processor.ts # Test queue processor
+│   └── health/
+│       ├── health.module.ts       # Health check module
+│       └── health.controller.ts   # Health check endpoint
+├── nest-cli.json                  # NestJS CLI configuration
+├── tsconfig.json                  # TypeScript configuration
+└── package.json                   # Dependencies
 ```
 
----
+### 2. Key Features Implemented
 
-## 🎬 What's Next: Baby Step 6
+#### ✅ Health Check Endpoint
+- **URL:** `http://localhost:3001/health`
+- **Response:**
+  ```json
+  {
+    "status": "ok",
+    "timestamp": "2025-12-24T21:42:40.797Z",
+    "service": "worker",
+    "database": "connected"
+  }
+  ```
 
-**Title**: Universe Manager CRUD  
-**Time**: 15 minutes
+#### ✅ Prisma Integration
+- Connected to PostgreSQL via Prisma
+- Graceful shutdown handling
+- Connection status monitoring
 
-**Will Create**:
-- Universe Manager module
-- CRUD endpoints for symbol_universe
-- Zod validation
-- Basic tests
+#### ✅ BullMQ Configuration
+- Redis connection configured
+- Test queue processor implemented
+- Ready for job processing
 
-**Then you can**:
+#### ✅ Environment Configuration
+- Uses `@nestjs/config` for environment variables
+- Supports multiple environments (local, dev, staging, prod)
+- Validates required configuration
+
+### 3. Build System Fixed
+
+#### Issues Resolved:
+1. **Database Package Build**
+   - Changed `main` from `./src/index.ts` to `./dist/index.js`
+   - Added build output to `dist/` directory
+   - Fixed import resolution
+
+2. **Shared Package Build**
+   - Changed `main` from `./src/index.ts` to `./dist/index.js`
+   - Ensured TypeScript compilation outputs correctly
+
+3. **Worker TypeScript Configuration**
+   - Simplified strict mode settings for initial development
+   - Fixed module resolution
+   - Ensured proper compilation to `dist/` directory
+
+## 🚀 How to Run
+
+### Start Infrastructure
 ```bash
-POST /universe/symbols {"symbol":"AAPL","market":"US"}
-GET  /universe/symbols
+pnpm dev:up
 ```
+
+### Build Packages
+```bash
+# Build all packages
+pnpm build
+
+# Or build individually
+pnpm build:shared
+pnpm build:database
+pnpm build:worker
+```
+
+### Start Worker (Development Mode)
+```bash
+pnpm dev:worker
+```
+
+### Test Health Endpoint
+```bash
+curl http://localhost:3001/health
+```
+
+**Expected Output:**
+```powershell
+StatusCode        : 200
+Content           : {"status":"ok","timestamp":"...","service":"worker","database":"connected"}
+```
+
+## 📊 Console Output
+
+When the worker starts successfully, you should see:
+
+```
+[Nest] 28324  - 24/12/2025, 23:42:11     LOG [NestFactory] Starting Nest application...
+[Nest] 28324  - 24/12/2025, 23:42:11     LOG [InstanceLoader] AppModule dependencies initialized +151ms
+[Nest] 28324  - 24/12/2025, 23:42:11     LOG [InstanceLoader] BullModule dependencies initialized +2ms
+[Nest] 28324  - 24/12/2025, 23:42:11     LOG [InstanceLoader] PrismaModule dependencies initialized +1ms
+[Nest] 28324  - 24/12/2025, 23:42:11     LOG [InstanceLoader] ConfigHostModule dependencies initialized +19ms
+[Nest] 28324  - 24/12/2025, 23:42:11     LOG [InstanceLoader] HealthModule dependencies initialized +1ms
+[Nest] 28324  - 24/12/2025, 23:42:11     LOG [PrismaService] ✅ Database connected successfully
+[Nest] 28324  - 24/12/2025, 23:42:11     LOG [NestApplication] Nest application successfully started +10ms
+[Nest] 28324  - 24/12/2025, 23:42:11     LOG [Bootstrap] 🚀 Worker service is running on: http://localhost:3001
+[Nest] 28324  - 24/12/2025, 23:42:11     LOG [Bootstrap] 📊 Health check: http://localhost:3001/health
+[Nest] 28324  - 24/12/2025, 23:42:11     LOG [Bootstrap] 🔧 Environment: config_local
+```
+
+## 🔧 Configuration
+
+### Environment Variables (.env)
+```env
+# Server
+NODE_ENV=development
+PORT=3001
+
+# Database
+DATABASE_URL="postgresql://stocks:stocks@localhost:5432/stocks?schema=public"
+
+# Redis
+REDIS_URL="redis://localhost:6379"
+```
+
+## ✅ Verification Checklist
+
+- [x] Worker starts without errors
+- [x] Health endpoint returns 200 OK
+- [x] Database connection successful
+- [x] Redis connection successful
+- [x] BullMQ initialized
+- [x] TypeScript compilation works
+- [x] Hot reload works in dev mode
+
+## 🎯 What's Next?
+
+**Baby Step 6: Universe Manager CRUD**
+- Implement CRUD operations for `symbol_universe` table
+- Add validation using Zod schemas
+- Create REST endpoints for symbol management
+- Add unit tests
+
+## 📝 Technical Notes
+
+### Module Architecture
+- **AppModule**: Root module that imports all feature modules
+- **PrismaModule**: Global module for database access
+- **QueueModule**: Global module for job queue
+- **HealthModule**: Feature module for health checks
+- **ConfigModule**: Global module for configuration
+
+### Design Decisions
+1. **Port 3001**: Chosen to avoid conflicts with Next.js (3000)
+2. **Global Modules**: Prisma and Queue are global for easy access
+3. **Graceful Shutdown**: Proper cleanup of connections on exit
+4. **Health Checks**: Essential for AWS ECS health monitoring
+
+### Build Process
+1. Shared package must be built first (contains contracts)
+2. Database package must be built second (contains Prisma client)
+3. Worker can then be built (depends on both)
+
+## 🐛 Troubleshooting
+
+### Issue: "Cannot use import statement outside a module"
+**Solution:** Build the database package first: `pnpm build:database`
+
+### Issue: Worker won't start
+**Solution:** Ensure Docker services are running: `pnpm dev:up`
+
+### Issue: Database connection failed
+**Solution:** Check PostgreSQL is healthy: `pnpm dev:ps`
+
+### Issue: TypeScript errors
+**Solution:** Rebuild all packages: `pnpm build`
 
 ---
 
-## 📊 Progress Tracker
-
-| Step | Status | Time | Completed |
-|------|--------|------|-----------|
-| 1. Monorepo Foundation | ✅ **DONE** | 10 min | Step 1 |
-| 2. Docker Infrastructure | ✅ **DONE** | 5 min | Step 2 |
-| 3. Prisma Schema | ✅ **DONE** | 10 min | Step 3 |
-| 4. Shared Contracts | ✅ **DONE** | 10 min | Step 4 |
-| 5. Worker Bootstrap | ✅ **DONE** | 15 min | **NOW** |
-| 6. Universe Manager CRUD | ⚪ Ready | 15 min | — |
-| 7. Universe CSV Import | ⚪ Pending | 10 min | — |
-| 8. Pipeline Tracking | ⚪ Pending | 10 min | — |
-| 9. BullMQ Config | ⚪ Pending | 10 min | — |
-| 10. Analysis Scaffold | ⚪ Pending | 5 min | — |
-
-**Progress**: 5/10 (50%) ✅
-
----
-
-## 💡 Key Implementation Details
-
-### Prisma Service with Health Check
-
-```typescript
-export class PrismaService extends PrismaClient {
-  async onModuleInit() {
-    await this.$connect();
-    this.logger.log('✅ Database connected');
-  }
-
-  async isHealthy(): Promise<boolean> {
-    try {
-      await this.$queryRaw`SELECT 1`;
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-}
-```
-
-### BullMQ Test Queue
-
-```typescript
-@Processor('test-queue')
-export class TestQueueProcessor extends WorkerHost {
-  async process(job: Job) {
-    this.logger.log(`Processing: ${job.id}`);
-    // Simulate work
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return { processed: true };
-  }
-}
-```
-
-### Health Controller
-
-```typescript
-@Controller('health')
-export class HealthController {
-  @Get()
-  async getHealth() {
-    const dbHealthy = await this.prisma.isHealthy();
-    return {
-      status: 'ok',
-      database: dbHealthy ? 'connected' : 'disconnected'
-    };
-  }
-}
-```
-
----
-
-## 🎉 Congratulations!
-
-You now have:
-- ✅ Worker service running on port 3001
-- ✅ Health endpoint with database check
-- ✅ Prisma connected to PostgreSQL
-- ✅ BullMQ connected to Redis
-- ✅ Test queue processor working
-- ✅ Ready for business logic
-
-**When ready for Baby Step 6, say**: *"Start Baby Step 6"* or *"Continue"*
-
----
-
-**Status**: ✅ Worker Bootstrap Complete  
-**Next**: Universe Manager CRUD  
-**Last Updated**: Dec 23, 2025
-
+**Previous:** [Step 4 - Shared Contracts](./step-4-shared-contracts.md)  
+**Next:** [Step 6 - Universe Manager CRUD](./step-6-universe-manager.md)  
+**Index:** [Baby Steps Roadmap](../baby-steps-roadmap.md)

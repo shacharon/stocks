@@ -49,3 +49,4 @@ networks:
   stocks-network:
     driver: bridge
 
+
