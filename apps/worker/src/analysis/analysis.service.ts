@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PipelineTrackingService } from './pipeline-tracking.service';
 import { FeatureFactoryService } from './feature-factory.service';
+import { ChangeDetectorService } from './change-detector.service';
+import { DeepDiveService } from './deep-dive.service';
 import { SectorService } from '../sector/sector.service';
 import { JobType, PipelineStatus, JobStatus, Market } from '@stocks/shared';
 
@@ -25,6 +27,8 @@ export class AnalysisService {
     private pipelineTracking: PipelineTrackingService,
     private featureFactory: FeatureFactoryService,
     private sectorService: SectorService,
+    private changeDetector: ChangeDetectorService,
+    private deepDive: DeepDiveService,
   ) {}
 
   /**
@@ -202,12 +206,67 @@ export class AnalysisService {
     try {
       await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.RUNNING);
 
-      // TODO: Implement change detection logic
-      this.logger.log(`[CHANGE_DETECTOR] Job ${jobRun.id} - Placeholder`);
+      this.logger.log(`[CHANGE_DETECTOR] Job ${jobRun.id} - Starting change detection`);
 
-      await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.COMPLETED, {
-        message: 'Change detector placeholder - not yet implemented',
-      });
+      if (portfolioId) {
+        // Portfolio-specific change detection
+        const result = await this.changeDetector.detectChangesForPortfolio(portfolioId, date);
+        
+        // Save decisions to database
+        await this.changeDetector.savePortfolioDailyDecisions(portfolioId, date, result.results);
+        
+        this.logger.log(
+          `[CHANGE_DETECTOR] Portfolio ${portfolioId}: ${result.processed} positions analyzed, ` +
+          `signals: BUY=${result.signals.BUY}, SELL=${result.signals.SELL}, ` +
+          `STRONG_BUY=${result.signals.STRONG_BUY}, STRONG_SELL=${result.signals.STRONG_SELL}`
+        );
+
+        await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.COMPLETED, {
+          portfolioId,
+          totalPositions: result.totalPositions,
+          processed: result.processed,
+          signals: result.signals,
+        });
+      } else {
+        // No specific portfolio - analyze all portfolios
+        const portfolios = await this.prisma.portfolio.findMany({
+          where: { isActive: true },
+          select: { id: true, name: true },
+        });
+
+        let totalProcessed = 0;
+        const allSignals: Record<string, number> = {
+          BUY: 0,
+          SELL: 0,
+          HOLD: 0,
+          STRONG_BUY: 0,
+          STRONG_SELL: 0,
+        };
+
+        for (const portfolio of portfolios) {
+          const result = await this.changeDetector.detectChangesForPortfolio(portfolio.id, date);
+          await this.changeDetector.savePortfolioDailyDecisions(portfolio.id, date, result.results);
+          
+          totalProcessed += result.processed;
+          Object.keys(result.signals).forEach(key => {
+            allSignals[key] = (allSignals[key] || 0) + result.signals[key];
+          });
+
+          this.logger.log(
+            `[CHANGE_DETECTOR] Portfolio "${portfolio.name}": ${result.processed} positions`
+          );
+        }
+
+        this.logger.log(
+          `[CHANGE_DETECTOR] Analyzed ${portfolios.length} portfolios, ${totalProcessed} total positions`
+        );
+
+        await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.COMPLETED, {
+          portfoliosAnalyzed: portfolios.length,
+          totalPositions: totalProcessed,
+          signals: allSignals,
+        });
+      }
     } catch (error) {
       await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.FAILED, null, error.message);
       throw error;
@@ -228,11 +287,66 @@ export class AnalysisService {
     try {
       await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.RUNNING);
 
-      // TODO: Implement deep dive report generation
-      this.logger.log(`[DEEP_DIVE] Job ${jobRun.id} - Placeholder`);
+      this.logger.log(`[DEEP_DIVE] Job ${jobRun.id} - Starting deep dive analysis`);
+
+      // Get decisions with STRONG_BUY or STRONG_SELL signals
+      const flaggedDecisions = await this.prisma.portfolioDailyDecisions.findMany({
+        where: {
+          date,
+          portfolioId: portfolioId || undefined,
+          signal: {
+            in: ['STRONG_BUY', 'STRONG_SELL'],
+          },
+        },
+        include: {
+          symbol: true,
+        },
+      });
+
+      this.logger.log(
+        `[DEEP_DIVE] Found ${flaggedDecisions.length} flagged symbols (STRONG_BUY/STRONG_SELL)`
+      );
+
+      let reportsGenerated = 0;
+      const reportSummary: Record<string, number> = {
+        STRONG_BUY: 0,
+        STRONG_SELL: 0,
+      };
+
+      for (const decision of flaggedDecisions) {
+        try {
+          // Generate deep dive report
+          const report = await this.deepDive.generateReport(
+            decision.symbol.symbol,
+            decision.symbol.market as Market,
+            date,
+            decision.signal,
+            decision.confidence,
+            decision.reasons
+          );
+
+          // Save report
+          await this.deepDive.saveReport(report);
+
+          reportsGenerated++;
+          reportSummary[decision.signal] = (reportSummary[decision.signal] || 0) + 1;
+
+          this.logger.log(
+            `[DEEP_DIVE] Generated report for ${decision.symbol.symbol}: ${decision.signal} (${decision.confidence}%)`
+          );
+        } catch (error) {
+          this.logger.error(
+            `[DEEP_DIVE] Failed to generate report for ${decision.symbol.symbol}: ${error.message}`
+          );
+        }
+      }
+
+      this.logger.log(`[DEEP_DIVE] Generated ${reportsGenerated} reports`);
 
       await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.COMPLETED, {
-        message: 'Deep dive placeholder - not yet implemented',
+        flaggedSymbols: flaggedDecisions.length,
+        reportsGenerated,
+        reportSummary,
       });
     } catch (error) {
       await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.FAILED, null, error.message);
