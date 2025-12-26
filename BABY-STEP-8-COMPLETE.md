@@ -252,3 +252,4 @@ Invoke-RestMethod -Uri "http://localhost:3001/market/sync?lookback=30&provider=s
 
 All code compiled successfully. Ready for testing once Docker services are running.
 
+

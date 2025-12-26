@@ -7,3 +7,4 @@ import { MarketDataProvider as IMarketDataProvider } from '@stocks/shared';
 export type MarketDataProvider = IMarketDataProvider;
 export { type DailyBar, type Market } from '@stocks/shared';
 
+

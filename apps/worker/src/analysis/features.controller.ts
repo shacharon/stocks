@@ -9,6 +9,15 @@ export class FeaturesController {
   constructor(private featureFactory: FeatureFactoryService) {}
 
   /**
+   * Serialize response, converting BigInt to string for JSON compatibility
+   */
+  private serializeResponse(data: any): any {
+    return JSON.parse(JSON.stringify(data, (key, value) => 
+      typeof value === 'bigint' ? value.toString() : value
+    ));
+  }
+
+  /**
    * Get features for a specific symbol on a specific date
    * GET /features/:symbol/:market/:date
    */
@@ -32,7 +41,7 @@ export class FeaturesController {
       };
     }
     
-    return features;
+    return this.serializeResponse(features);
   }
 
   /**
@@ -55,14 +64,14 @@ export class FeaturesController {
     
     const history = await this.featureFactory.getFeaturesHistory(symbol, market, startDate, endDate);
     
-    return {
+    return this.serializeResponse({
       symbol,
       market,
       startDate: startStr,
       endDate: endStr,
       count: history.length,
       features: history,
-    };
+    });
   }
 
   /**
@@ -72,7 +81,9 @@ export class FeaturesController {
   @Get('stats')
   async getStats(): Promise<any> {
     this.logger.log('Getting feature statistics');
-    return this.featureFactory.getFeatureStats();
+    const stats = await this.featureFactory.getFeatureStats();
+    return this.serializeResponse(stats);
   }
 }
+
 

@@ -125,3 +125,4 @@ Invoke-RestMethod -Uri "http://localhost:3001/sectors/strength" `
 
 **Next**: Proceed to Baby Step 13 (Change Detector)
 
+

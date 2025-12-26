@@ -496,3 +496,4 @@ GET  /changes/stats            - Get decision statistics
 
 Change detection with signal generation, portfolio-specific decision tracking, and pipeline integration is fully functional.
 
+

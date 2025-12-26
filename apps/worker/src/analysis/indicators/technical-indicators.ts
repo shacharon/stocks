@@ -243,3 +243,4 @@ export function calculateFeatures(bars: Bar[]): TechnicalFeatures {
   };
 }
 
+

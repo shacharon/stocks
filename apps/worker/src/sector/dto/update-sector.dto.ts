@@ -3,3 +3,4 @@ import { UpdateSectorSchema } from '@stocks/shared';
 
 export type UpdateSectorDto = z.infer<typeof UpdateSectorSchema>;
 
+
