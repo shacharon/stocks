@@ -5,6 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 import { QueueModule } from './queue/queue.module';
 import { UniverseModule } from './universe/universe.module';
+import { MarketModule } from './market/market.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -31,6 +32,7 @@ import configuration from './config/configuration';
     
     // Feature modules
     UniverseModule,
+    MarketModule,
   ],
 })
 export class AppModule {}
