@@ -4,6 +4,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 import { QueueModule } from './queue/queue.module';
+import { UniverseModule } from './universe/universe.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -27,6 +28,9 @@ import configuration from './config/configuration';
     PrismaModule,
     HealthModule,
     QueueModule,
+    
+    // Feature modules
+    UniverseModule,
   ],
 })
 export class AppModule {}
