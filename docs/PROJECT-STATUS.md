@@ -1,8 +1,8 @@
 # 📊 Project Status — EOD Stock Analyzer
 
-> **Last Updated**: Dec 24, 2025  
-> **Current Phase**: Foundation Complete + Worker Bootstrap ✅  
-> **Progress**: 5/17 baby steps complete (29%) ✅
+> **Last Updated**: December 26, 2024  
+> **Current Phase**: Feature Factory Complete ✅  
+> **Progress**: 11/17 baby steps complete (65%) ✅
 
 ---
 
@@ -15,19 +15,20 @@
 | **Database Schema** | ✅ Complete | 100% |
 | **Shared Contracts** | ✅ Complete | 100% |
 | **Worker Service** | ✅ Complete | 100% |
-| **Universe Manager** | ⚪ Not Started | 0% |
-| **Market Data Providers** | ⚪ Not Started | 0% |
-| **Analysis Engine** | ⚪ Not Started | 0% |
+| **Universe Manager** | ✅ Complete | 100% |
+| **Market Data Providers** | ✅ Complete | 100% |
+| **Portfolio Management** | ✅ Complete | 100% |
+| **Analysis Pipeline** | 🟡 In Progress | 60% |
+| **Technical Indicators** | ✅ Complete | 100% |
 | **Web Application** | ⚪ Not Started | 0% |
 
-**Overall Completion**: 29% ✅
+**Overall Completion**: 65% ✅
 
 ---
 
-## ✅ Completed Steps (5/17)
+## ✅ Completed Steps (11/17)
 
 ### Step 1: Monorepo Foundation ✅
-**Status**: Complete  
 **Documentation**: [docs/baby-steps/step-1-monorepo-foundation.md](baby-steps/step-1-monorepo-foundation.md)
 
 - ✅ pnpm workspace configuration
@@ -36,7 +37,6 @@
 - ✅ .gitignore and .env setup
 
 ### Step 2: Docker Infrastructure ✅
-**Status**: Complete  
 **Documentation**: [docs/baby-steps/step-2-docker-infrastructure.md](baby-steps/step-2-docker-infrastructure.md)
 
 - ✅ PostgreSQL 15 container
@@ -46,7 +46,6 @@
 - ✅ Docker Compose orchestration
 
 ### Step 3: Prisma Database Schema ✅
-**Status**: Complete  
 **Documentation**: [docs/baby-steps/step-3-prisma-schema.md](baby-steps/step-3-prisma-schema.md)
 
 - ✅ 13 database tables with UUID IDs
@@ -55,7 +54,6 @@
 - ✅ Prisma client generated
 
 ### Step 4: Shared Contracts Package ✅
-**Status**: Complete  
 **Documentation**: [docs/baby-steps/step-4-shared-contracts.md](baby-steps/step-4-shared-contracts.md)
 
 - ✅ TypeScript interfaces for all entities
@@ -64,7 +62,6 @@
 - ✅ Export structure
 
 ### Step 5: Worker NestJS Bootstrap ✅
-**Status**: Complete  
 **Documentation**: [docs/baby-steps/step-5-worker-bootstrap.md](baby-steps/step-5-worker-bootstrap.md)
 
 - ✅ NestJS application structure
@@ -72,232 +69,355 @@
 - ✅ Prisma integration with connection management
 - ✅ BullMQ configuration with Redis
 - ✅ Environment configuration
-- ✅ Build system fixed (shared + database + worker)
-- ✅ Development mode with hot reload
-- ✅ **Worker is running and responding!**
+- ✅ Build system fixed
+
+### Step 6: Universe Manager CRUD ✅
+**Documentation**: [docs/baby-steps/step-6-universe-manager.md](baby-steps/step-6-universe-manager.md)
+
+- ✅ Universe module with CRUD operations
+- ✅ REST endpoints for symbol management (8 endpoints)
+- ✅ Zod validation integration
+- ✅ Duplicate detection and active/inactive status
+- ✅ Market filtering and statistics
+
+### Step 7: Universe CSV Import ✅
+**Documentation**: [docs/baby-steps/step-7-universe-csv-import.md](baby-steps/step-7-universe-csv-import.md)
+
+- ✅ Bulk import endpoint (JSON batch)
+- ✅ CSV file upload and parsing
+- ✅ Duplicate handling
+- ✅ Validation and detailed error reporting
+
+### Step 8: Market Data Providers ✅
+**Documentation**: [docs/baby-steps/step-8-market-providers.md](baby-steps/step-8-market-providers.md)
+
+- ✅ MarketDataProvider interface
+- ✅ MockProvider implementation
+- ✅ StooqProvider for US market
+- ✅ Market sync endpoint (POST /market/sync)
+- ✅ Market statistics endpoint
+
+### Step 9: Portfolio Management ✅
+**Documentation**: [docs/baby-steps/step-9-portfolio-crud.md](baby-steps/step-9-portfolio-crud.md)
+
+- ✅ Portfolio CRUD endpoints (6 endpoints)
+- ✅ Position CRUD endpoints (4 endpoints)
+- ✅ Validation for buy price and quantity
+- ✅ Symbol existence checks
+- ✅ Portfolio statistics
+
+### Step 10: Analysis Pipeline Scaffold ✅
+**Documentation**: [docs/baby-steps/step-10-analysis-pipeline.md](baby-steps/step-10-analysis-pipeline.md)
+
+- ✅ Pipeline orchestration service
+- ✅ Pipeline tracking (pipeline_runs, job_runs)
+- ✅ Idempotency checks
+- ✅ 5 job types defined (MARKET_SYNC, FEATURE_FACTORY, SECTOR_SELECTOR, CHANGE_DETECTOR, DEEP_DIVE)
+- ✅ Pipeline trigger and status endpoints
+
+### Step 11: Feature Factory Implementation ✅
+**Documentation**: [docs/baby-steps/step-11-feature-factory.md](baby-steps/step-11-feature-factory.md)
+
+- ✅ Technical indicators module (15 indicators)
+- ✅ Feature calculation service
+- ✅ Feature query endpoints (3 endpoints)
+- ✅ Integration with analysis pipeline
+- ✅ Complete API documentation (29 endpoints)
+- ✅ Comprehensive testing guide
+- ✅ Automated integration test suite
+
+**Indicators Implemented**:
+- Price: SMA (20/50/200), EMA (12/26)
+- Momentum: RSI (14), MACD (12/26/9)
+- Volatility: Bollinger Bands (20, 2σ), ATR (14)
+- Volume: Volume SMA (20), Volume Ratio
 
 ---
 
-## ⚪ Pending Steps (12/17)
+## ⚪ Pending Steps (6/17)
 
-### Step 6: Universe Manager CRUD ⚪
+### Step 12: Sector Selector Logic ⚪
 **Status**: Ready to start 🎯 NEXT  
-**Estimated Time**: 15-20 minutes
+**Estimated Time**: 45-60 minutes
 
-**Will Create**:
-- Universe module with CRUD operations
-- REST endpoints for symbol management
-- Zod validation integration
-- Basic unit tests
+**Will Implement**:
+- Sector strength calculation algorithms
+- Sector ranking and filtering
+- daily_sector_lists table population
+- Sector comparison endpoints
+- Integration with symbol_sector_map
 
-### Step 7: Universe CSV Import ⚪
-**Estimated Time**: 10-15 minutes
+### Step 13: Change Detector ⚪
+**Estimated Time**: 45-60 minutes
 
-**Will Create**:
-- Bulk import endpoint
-- CSV parsing logic
-- Duplicate handling
-- Validation and error reporting
+**Will Implement**:
+- Change detection algorithms
+- portfolio_daily_decisions table population
+- Buy/sell signal generation
+- Price and indicator change tracking
+- Portfolio-specific overlays
 
-### Step 8: Pipeline Tracking Service ⚪
-**Estimated Time**: 10 minutes
+### Step 14: Deep Dive Reports ⚪
+**Estimated Time**: 30-45 minutes
 
-**Will Create**:
-- Pipeline run tracking
-- Job run tracking
-- Idempotency helpers
+**Will Implement**:
+- Deep dive report generation
+- deep_dive_reports table population
+- Detailed analysis for flagged symbols
+- Report query endpoints
 
-### Step 9: Market Data Provider Interface ⚪
-**Estimated Time**: 15 minutes
+### Step 15: Stop-loss Management ⚪
+**Estimated Time**: 45-60 minutes
 
-**Will Create**:
-- Provider interface
-- Mock provider
-- Stooq provider (US)
+**Will Implement**:
+- Stop-loss rules and calculations
+- stop_rules_state table population
+- Stop-loss never decreases invariant
+- Position stop-loss tracking
 
-### Step 10: Market Sync Job ⚪
-**Estimated Time**: 15 minutes
+### Step 16: Daily Deltas ⚪
+**Estimated Time**: 30 minutes
 
-**Will Create**:
-- BullMQ job processor
-- Daily OHLCV sync
-- Idempotency with pipeline_runs
+**Will Implement**:
+- Daily delta calculations
+- daily_deltas table population
+- Change summary generation
+- Delta query endpoints
 
-### Steps 11-17: Analysis Engine + Web App ⚪
-- Feature Factory engines
-- Sector Classification
-- Sector Selector
-- Change Detector
-- Deep Inspector
-- Web application
-- Portfolio CRUD UI
+### Step 17: Web UI (Next.js) ⚪
+**Estimated Time**: 2-3 hours
 
----
-
-## 🎯 Current Capabilities
-
-### What Works Now ✅
-- ✅ Monorepo workspace configured
-- ✅ Docker containers running (Postgres + Redis)
-- ✅ Database with 13 tables
-- ✅ Type-safe contracts (`@stocks/shared`)
-- ✅ Worker service running on port 3001
-- ✅ Health endpoint responding
-- ✅ Prisma connected to database
-- ✅ BullMQ connected to Redis
-- ✅ Hot reload in development mode
-- ✅ Build system working correctly
-
-### What Doesn't Work Yet ⚪
-- ⚪ Universe management endpoints
-- ⚪ CSV import
-- ⚪ Pipeline tracking
-- ⚪ Market data sync
-- ⚪ Analysis engine
-- ⚪ Web application
+**Will Implement**:
+- Next.js App Router setup
+- Portfolio dashboard
+- Symbol universe viewer
+- Analysis pipeline viewer
+- Feature charts and visualizations
 
 ---
 
-## 🔧 Available Commands
+## 📈 Current Capabilities
 
-### Quick Start
-```bash
-# Start everything
-pnpm dev:up          # Start Docker services
-pnpm build           # Build all packages
-pnpm dev:worker      # Start worker in dev mode
+### ✅ Fully Functional Features
 
-# Test
-curl http://localhost:3001/health
-```
+#### 1. System & Health
+- Health check with database connectivity
+
+#### 2. Universe Management (8 endpoints)
+- Add/update/delete symbols
+- Get symbols with filtering
+- Universe statistics
+- Symbol lookup
+- Batch import (JSON)
+- CSV file import
+
+#### 3. Market Data (2 endpoints)
+- Sync market data (MockProvider, StooqProvider)
+- Market statistics
+
+#### 4. Portfolio Management (10 endpoints)
+- Portfolio CRUD
+- Position CRUD
+- Portfolio statistics
+- Validation and constraints
+
+#### 5. Analysis Pipeline (4 endpoints)
+- Trigger pipeline runs
+- Get pipeline runs and status
+- Job tracking and idempotency
+- Pipeline statistics
+
+#### 6. Feature Analysis (3 endpoints) ✨ NEW
+- Get features for symbol/date
+- Get feature history (time series)
+- Feature coverage statistics
+
+**Total REST Endpoints**: 29
+
+---
+
+## 🔧 Tech Stack
+
+### Infrastructure
+- **Docker Compose**: PostgreSQL 15, Redis 7
+- **Node.js**: v20 LTS
+- **Package Manager**: pnpm workspaces
+
+### Backend (Worker)
+- **Framework**: NestJS
+- **ORM**: Prisma
+- **Queue**: BullMQ with Redis
+- **Validation**: Zod
+- **Language**: TypeScript (strict mode)
+
+### Frontend (Planned)
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: SCSS modules
+
+### Database
+- **Primary**: PostgreSQL 15
+- **Cache**: Redis 7
+- **Schema**: 13 tables (all with UUIDs)
+
+---
+
+## 📚 Available Commands
 
 ### Docker
 ```bash
-pnpm dev:up          # Start Postgres + Redis
-pnpm dev:down        # Stop containers
-pnpm dev:logs        # View logs
-pnpm dev:ps          # Check status
+pnpm dev:up        # Start Docker services
+pnpm dev:down      # Stop Docker services
+pnpm dev:logs      # View Docker logs
+pnpm dev:ps        # List Docker services
 ```
 
 ### Database
 ```bash
-pnpm db:generate     # Generate Prisma client
-pnpm db:migrate      # Run migrations
-pnpm db:studio       # Open Prisma Studio GUI
+pnpm db:generate   # Generate Prisma client
+pnpm db:migrate    # Run migrations
+pnpm db:studio     # Open Prisma Studio
+pnpm db:seed       # Seed database (TBD)
 ```
 
-### Build
+### Development
 ```bash
-pnpm build           # Build all packages
-pnpm build:shared    # Build @stocks/shared
-pnpm build:database  # Build @stocks/database
-pnpm build:worker    # Build apps/worker
+# Worker service
+pnpm -C apps/worker dev        # Start worker (hot reload)
+pnpm -C apps/worker build      # Build worker
+pnpm -C apps/worker start      # Start worker (production)
+
+# Shared packages
+pnpm -C packages/shared build    # Build shared
+pnpm -C packages/database build  # Build database
 ```
 
-### Worker Service
+### Testing
 ```bash
-pnpm dev:worker      # Start in dev mode (hot reload)
-pnpm build:worker    # Build for production
-```
-
-### Verification
-```bash
-# Check worker health
-curl http://localhost:3001/health
-
-# Expected response:
-# {"status":"ok","timestamp":"...","service":"worker","database":"connected"}
+.\test-integration.ps1        # Run full integration test suite
 ```
 
 ---
 
-## 📈 Progress Metrics
+## 📊 Database Tables
 
-**Time Spent**: ~60 minutes  
-**Time Remaining**: ~90 minutes (Steps 6-17)
+| Table | Status | Records (Test) | Purpose |
+|-------|--------|---------------|---------|
+| `portfolios` | ✅ | 1 | Portfolio metadata |
+| `portfolio_positions` | ✅ | 2 | Portfolio holdings |
+| `symbol_universe` | ✅ | 8 | Tradeable symbols |
+| `symbol_sector_map` | ⚪ | 0 | Symbol-sector relationships |
+| `pipeline_runs` | ✅ | 1 | Pipeline execution tracking |
+| `job_runs` | ✅ | 5 | Job execution tracking |
+| `market_daily_bars` | ✅ | 400 | OHLCV price data |
+| `daily_symbol_features` | ✅ | 8 | Technical indicators |
+| `portfolio_daily_decisions` | ⚪ | 0 | Portfolio-specific signals |
+| `stop_rules_state` | ⚪ | 0 | Stop-loss state |
+| `daily_sector_lists` | ⚪ | 0 | Sector rankings |
+| `deep_dive_reports` | ⚪ | 0 | Detailed analysis reports |
+| `daily_deltas` | ⚪ | 0 | Daily change summaries |
 
-**Completion**: 29% ✅
-
-**Baby Steps Completed**: 5/17
-- ✅ Step 1: Monorepo Foundation
-- ✅ Step 2: Docker Infrastructure
-- ✅ Step 3: Prisma Schema
-- ✅ Step 4: Shared Contracts
-- ✅ Step 5: Worker Bootstrap
-
----
-
-## 🚀 Next Actions
-
-### Immediate Next Step: Baby Step 6 - Universe Manager CRUD
-
-**What We'll Build**:
-1. Universe module in NestJS
-2. CRUD endpoints:
-   - `POST /universe/symbols` - Add symbol
-   - `GET /universe/symbols` - List symbols
-   - `GET /universe/symbols/:id` - Get symbol
-   - `PUT /universe/symbols/:id` - Update symbol
-   - `DELETE /universe/symbols/:id` - Delete symbol
-3. Zod validation integration
-4. Basic unit tests
-
-**Estimated Time**: 15-20 minutes
-
-**After That**:
-- Step 7: CSV Import
-- Step 8: Pipeline Tracking
-- Step 9: Market Data Providers
-- Step 10: Market Sync Job
+**Legend**: ✅ In Use | ⚪ Not Yet Used
 
 ---
 
-## 🐛 Recent Issues Fixed
+## 🎯 Next Steps
 
-### Build System Issues ✅ FIXED
-- **Issue**: Database package not building correctly
-- **Fix**: Changed `main` from `./src/index.ts` to `./dist/index.js`
-- **Status**: ✅ Resolved
+### Immediate (Baby Step 12)
+1. Implement sector selector logic
+2. Create sector strength calculation algorithms
+3. Populate `daily_sector_lists` table
+4. Add sector comparison endpoints
+5. Test with existing symbols
 
-- **Issue**: Shared package not building correctly
-- **Fix**: Changed `main` from `./src/index.ts` to `./dist/index.js`
-- **Status**: ✅ Resolved
+### Short Term (Steps 13-14)
+1. Implement change detector
+2. Generate buy/sell signals
+3. Create deep dive reports
+4. Complete analysis pipeline
 
-- **Issue**: Worker TypeScript strict mode errors
-- **Fix**: Simplified tsconfig for initial development
-- **Status**: ✅ Resolved
+### Medium Term (Steps 15-16)
+1. Implement stop-loss management
+2. Add daily delta calculations
+3. Complete all job types
 
-- **Issue**: "Cannot use import statement outside a module"
-- **Fix**: Build packages in correct order (shared → database → worker)
-- **Status**: ✅ Resolved
-
-### Current Status
-✅ **All systems operational!**
-- Worker running on port 3001
-- Database connected
-- Redis connected
-- Health endpoint responding
-- Hot reload working
-
----
-
-## 📚 Documentation
-
-### Main Guides
-- [README](../README.md) - Project overview
-- [Installation Guide](./installation-guide.md) - Setup instructions
-- [Build Guide](./BUILD-GUIDE.md) - Build and run instructions
-- [Baby Steps Roadmap](./baby-steps-roadmap.md) - Implementation plan
-
-### Completed Baby Steps
-1. [Monorepo Foundation](./baby-steps/step-1-monorepo-foundation.md)
-2. [Docker Infrastructure](./baby-steps/step-2-docker-infrastructure.md)
-3. [Prisma Schema](./baby-steps/step-3-prisma-schema.md)
-4. [Shared Contracts](./baby-steps/step-4-shared-contracts.md)
-5. [Worker Bootstrap](./baby-steps/step-5-worker-bootstrap.md)
+### Long Term (Step 17)
+1. Build Next.js web UI
+2. Create dashboards
+3. Add visualizations
+4. Deploy to AWS ECS
 
 ---
 
-**Status**: ✅ Foundation Complete - Ready for Feature Development!  
-**Last Updated**: Dec 24, 2025  
-**Progress**: Excellent - All infrastructure in place, worker running!
+## 📖 Documentation
+
+### Master Documents
+- **This File**: Overall project status and progress
+- **API Reference**: [docs/API-REFERENCE.md](API-REFERENCE.md) - All 29 REST endpoints
+- **Testing Guide**: [docs/TESTING-GUIDE.md](TESTING-GUIDE.md) - Manual testing procedures
+- **Baby Steps Roadmap**: [docs/baby-steps-roadmap.md](baby-steps-roadmap.md) - Full plan
+
+### Baby Step Reports
+- [Step 1: Monorepo Foundation](baby-steps/step-1-monorepo-foundation.md)
+- [Step 2: Docker Infrastructure](baby-steps/step-2-docker-infrastructure.md)
+- [Step 3: Prisma Schema](baby-steps/step-3-prisma-schema.md)
+- [Step 4: Shared Contracts](baby-steps/step-4-shared-contracts.md)
+- [Step 5: Worker Bootstrap](baby-steps/step-5-worker-bootstrap.md)
+- [Step 6: Universe Manager](baby-steps/step-6-universe-manager.md)
+- [Step 7: CSV Import](baby-steps/step-7-universe-csv-import.md)
+- [Step 8: Market Providers](baby-steps/step-8-market-providers.md) *(to be created)*
+- [Step 9: Portfolio CRUD](baby-steps/step-9-portfolio-crud.md) *(to be created)*
+- [Step 10: Analysis Pipeline](baby-steps/step-10-analysis-pipeline.md) *(to be created)*
+- [Step 11: Feature Factory](baby-steps/step-11-feature-factory.md) ✨ NEW
+
+### Helper Scripts
+- **Integration Tests**: `test-integration.ps1` - Automated test suite
+
+---
+
+## 🚀 How to Test Everything
+
+```powershell
+# 1. Start services
+pnpm dev:up
+pnpm -C apps/worker dev
+
+# 2. Run automated tests
+.\test-integration.ps1
+
+# Expected: 27+ tests pass
+```
+
+---
+
+## 🎓 Key Achievements
+
+1. ✅ **Monorepo** with proper TypeScript workspace
+2. ✅ **Docker** infrastructure for local dev
+3. ✅ **13-table database** schema with Prisma
+4. ✅ **NestJS worker** with health checks
+5. ✅ **BullMQ integration** with Redis
+6. ✅ **Universe management** with CSV import (8 endpoints)
+7. ✅ **Market data sync** with Stooq provider (2 endpoints)
+8. ✅ **Portfolio management** with CRUD (10 endpoints)
+9. ✅ **Analysis pipeline** with job tracking (4 endpoints)
+10. ✅ **Technical indicators** with 15 features (3 endpoints)
+11. ✅ **Complete API documentation** (29 endpoints)
+12. ✅ **Testing suite** (manual + automated)
+
+---
+
+## 📊 Progress Metrics
+
+- **Baby Steps Completed**: 11 / 17 (65%)
+- **REST Endpoints**: 29
+- **Database Tables Active**: 8 / 13 (62%)
+- **Technical Indicators**: 15
+- **Test Coverage**: Manual + Automated integration tests
+- **Documentation Pages**: 12+
+
+---
+
+**Last Updated**: December 26, 2024  
+**Status**: ✅ Ready for Baby Step 12 (Sector Selector)  
+**Remaining Steps**: 6 (estimated 5-7 hours)

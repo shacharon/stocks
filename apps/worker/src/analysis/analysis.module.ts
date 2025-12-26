@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AnalysisController } from './analysis.controller';
+import { FeaturesController } from './features.controller';
 import { AnalysisService } from './analysis.service';
 import { PipelineTrackingService } from './pipeline-tracking.service';
+import { FeatureFactoryService } from './feature-factory.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 /**
@@ -19,9 +21,9 @@ import { PrismaModule } from '../prisma/prisma.module';
  */
 @Module({
   imports: [PrismaModule],
-  controllers: [AnalysisController],
-  providers: [AnalysisService, PipelineTrackingService],
-  exports: [AnalysisService, PipelineTrackingService],
+  controllers: [AnalysisController, FeaturesController],
+  providers: [AnalysisService, PipelineTrackingService, FeatureFactoryService],
+  exports: [AnalysisService, PipelineTrackingService, FeatureFactoryService],
 })
 export class AnalysisModule {}
 

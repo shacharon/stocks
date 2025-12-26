@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PipelineTrackingService } from './pipeline-tracking.service';
+import { FeatureFactoryService } from './feature-factory.service';
 import { JobType, PipelineStatus, JobStatus } from '@stocks/shared';
 
 /**
@@ -21,6 +22,7 @@ export class AnalysisService {
   constructor(
     private prisma: PrismaService,
     private pipelineTracking: PipelineTrackingService,
+    private featureFactory: FeatureFactoryService,
   ) {}
 
   /**
@@ -111,11 +113,24 @@ export class AnalysisService {
     try {
       await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.RUNNING);
 
-      // TODO: Implement feature calculation logic
-      this.logger.log(`[FEATURE_FACTORY] Job ${jobRun.id} - Placeholder`);
+      this.logger.log(`[FEATURE_FACTORY] Job ${jobRun.id} - Starting feature calculation`);
+      
+      // Calculate features for all symbols in the universe
+      const result = await this.featureFactory.calculateFeaturesForUniverse(date);
+      
+      this.logger.log(
+        `[FEATURE_FACTORY] Job ${jobRun.id} - Processed ${result.total} symbols: ${result.successful} successful, ${result.failed} failed`
+      );
+
+      if (result.failed > 0) {
+        this.logger.warn(`[FEATURE_FACTORY] Errors: ${result.errors.slice(0, 5).join('; ')}`);
+      }
 
       await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.COMPLETED, {
-        message: 'Feature factory placeholder - not yet implemented',
+        total: result.total,
+        successful: result.successful,
+        failed: result.failed,
+        errorSample: result.errors.slice(0, 5),
       });
     } catch (error) {
       await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.FAILED, null, error.message);
