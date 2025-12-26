@@ -6,6 +6,8 @@ import { HealthModule } from './health/health.module';
 import { QueueModule } from './queue/queue.module';
 import { UniverseModule } from './universe/universe.module';
 import { MarketModule } from './market/market.module';
+import { PortfolioModule } from './portfolio/portfolio.module';
+import { AnalysisModule } from './analysis/analysis.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -33,6 +35,8 @@ import configuration from './config/configuration';
     // Feature modules
     UniverseModule,
     MarketModule,
+    PortfolioModule,
+    AnalysisModule,
   ],
 })
 export class AppModule {}
