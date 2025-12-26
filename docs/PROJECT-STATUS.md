@@ -1,8 +1,8 @@
 # 📊 Project Status — EOD Stock Analyzer
 
 > **Last Updated**: December 26, 2024  
-> **Current Phase**: Feature Factory Complete ✅  
-> **Progress**: 11/17 baby steps complete (65%) ✅
+> **Current Phase**: Sector Selector Complete ✅  
+> **Progress**: 12/17 baby steps complete (71%) ✅
 
 ---
 
@@ -18,15 +18,16 @@
 | **Universe Manager** | ✅ Complete | 100% |
 | **Market Data Providers** | ✅ Complete | 100% |
 | **Portfolio Management** | ✅ Complete | 100% |
-| **Analysis Pipeline** | 🟡 In Progress | 60% |
+| **Analysis Pipeline** | 🟡 In Progress | 70% |
 | **Technical Indicators** | ✅ Complete | 100% |
+| **Sector Analysis** | ✅ Complete | 100% |
 | **Web Application** | ⚪ Not Started | 0% |
 
-**Overall Completion**: 65% ✅
+**Overall Completion**: 71% ✅
 
 ---
 
-## ✅ Completed Steps (11/17)
+## ✅ Completed Steps (12/17)
 
 ### Step 1: Monorepo Foundation ✅
 **Documentation**: [docs/baby-steps/step-1-monorepo-foundation.md](baby-steps/step-1-monorepo-foundation.md)
@@ -132,22 +133,27 @@
 - Volatility: Bollinger Bands (20, 2σ), ATR (14)
 - Volume: Volume SMA (20), Volume Ratio
 
+### Step 12: Sector Selector Logic ✅
+**Documentation**: [docs/baby-steps/step-12-sector-selector.md](baby-steps/step-12-sector-selector.md)
+
+- ✅ Sector mapping CRUD operations (8 endpoints)
+- ✅ Sector strength calculation with composite scoring
+- ✅ Integration with analysis pipeline (SECTOR_SELECTOR job)
+- ✅ Daily sector list generation and storage
+- ✅ Query endpoints with market and top-N filtering
+- ✅ Multi-market support (US, TASE)
+
+**Strength Metrics**:
+- Average RSI, SMA distance, volume ratio
+- Strong/weak symbol counts
+- Composite score (0-100) with weighted factors
+
 ---
 
-## ⚪ Pending Steps (6/17)
-
-### Step 12: Sector Selector Logic ⚪
-**Status**: Ready to start 🎯 NEXT  
-**Estimated Time**: 45-60 minutes
-
-**Will Implement**:
-- Sector strength calculation algorithms
-- Sector ranking and filtering
-- daily_sector_lists table population
-- Sector comparison endpoints
-- Integration with symbol_sector_map
+## ⚪ Pending Steps (5/17)
 
 ### Step 13: Change Detector ⚪
+**Status**: Ready to start 🎯 NEXT  
 **Estimated Time**: 45-60 minutes
 
 **Will Implement**:
@@ -227,12 +233,18 @@
 - Job tracking and idempotency
 - Pipeline statistics
 
-#### 6. Feature Analysis (3 endpoints) ✨ NEW
+#### 6. Feature Analysis (3 endpoints)
 - Get features for symbol/date
 - Get feature history (time series)
 - Feature coverage statistics
 
-**Total REST Endpoints**: 29
+#### 7. Sector Management (8 endpoints) ✨ NEW
+- Sector mapping CRUD
+- Sector strength calculation
+- Daily sector list queries
+- Sector statistics
+
+**Total REST Endpoints**: 37
 
 ---
 
@@ -306,16 +318,18 @@ pnpm -C packages/database build  # Build database
 | `portfolios` | ✅ | 1 | Portfolio metadata |
 | `portfolio_positions` | ✅ | 2 | Portfolio holdings |
 | `symbol_universe` | ✅ | 8 | Tradeable symbols |
-| `symbol_sector_map` | ⚪ | 0 | Symbol-sector relationships |
+| `symbol_sector_map` | ✅ | 5+ | Symbol-sector relationships |
 | `pipeline_runs` | ✅ | 1 | Pipeline execution tracking |
 | `job_runs` | ✅ | 5 | Job execution tracking |
 | `market_daily_bars` | ✅ | 400 | OHLCV price data |
 | `daily_symbol_features` | ✅ | 8 | Technical indicators |
 | `portfolio_daily_decisions` | ⚪ | 0 | Portfolio-specific signals |
 | `stop_rules_state` | ⚪ | 0 | Stop-loss state |
-| `daily_sector_lists` | ⚪ | 0 | Sector rankings |
+| `daily_sector_lists` | ✅ | 1+ | Sector rankings |
 | `deep_dive_reports` | ⚪ | 0 | Detailed analysis reports |
 | `daily_deltas` | ⚪ | 0 | Daily change summaries |
+
+**Tables Active**: 10 / 13 (77%)
 
 **Legend**: ✅ In Use | ⚪ Not Yet Used
 
@@ -402,22 +416,24 @@ pnpm -C apps/worker dev
 8. ✅ **Portfolio management** with CRUD (10 endpoints)
 9. ✅ **Analysis pipeline** with job tracking (4 endpoints)
 10. ✅ **Technical indicators** with 15 features (3 endpoints)
-11. ✅ **Complete API documentation** (29 endpoints)
-12. ✅ **Testing suite** (manual + automated)
+11. ✅ **Sector analysis** with strength scoring (8 endpoints)
+12. ✅ **Complete API documentation** (37 endpoints)
+13. ✅ **Testing suite** (manual + automated)
 
 ---
 
 ## 📊 Progress Metrics
 
-- **Baby Steps Completed**: 11 / 17 (65%)
-- **REST Endpoints**: 29
-- **Database Tables Active**: 8 / 13 (62%)
+- **Baby Steps Completed**: 12 / 17 (71%)
+- **REST Endpoints**: 37
+- **Database Tables Active**: 10 / 13 (77%)
 - **Technical Indicators**: 15
+- **Sector Endpoints**: 8
 - **Test Coverage**: Manual + Automated integration tests
 - **Documentation Pages**: 12+
 
 ---
 
 **Last Updated**: December 26, 2024  
-**Status**: ✅ Ready for Baby Step 12 (Sector Selector)  
-**Remaining Steps**: 6 (estimated 5-7 hours)
+**Status**: ✅ Ready for Baby Step 13 (Change Detector)  
+**Remaining Steps**: 5 (estimated 4-6 hours)

@@ -8,6 +8,7 @@ import { UniverseModule } from './universe/universe.module';
 import { MarketModule } from './market/market.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { AnalysisModule } from './analysis/analysis.module';
+import { SectorModule } from './sector/sector.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -37,6 +38,7 @@ import configuration from './config/configuration';
     MarketModule,
     PortfolioModule,
     AnalysisModule,
+    SectorModule,
   ],
 })
 export class AppModule {}

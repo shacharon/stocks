@@ -5,6 +5,7 @@ import { AnalysisService } from './analysis.service';
 import { PipelineTrackingService } from './pipeline-tracking.service';
 import { FeatureFactoryService } from './feature-factory.service';
 import { PrismaModule } from '../prisma/prisma.module';
+import { SectorModule } from '../sector/sector.module';
 
 /**
  * Analysis Module
@@ -20,7 +21,7 @@ import { PrismaModule } from '../prisma/prisma.module';
  * - Deep dive reports
  */
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, SectorModule],
   controllers: [AnalysisController, FeaturesController],
   providers: [AnalysisService, PipelineTrackingService, FeatureFactoryService],
   exports: [AnalysisService, PipelineTrackingService, FeatureFactoryService],

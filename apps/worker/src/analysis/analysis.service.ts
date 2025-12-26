@@ -2,7 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PipelineTrackingService } from './pipeline-tracking.service';
 import { FeatureFactoryService } from './feature-factory.service';
-import { JobType, PipelineStatus, JobStatus } from '@stocks/shared';
+import { SectorService } from '../sector/sector.service';
+import { JobType, PipelineStatus, JobStatus, Market } from '@stocks/shared';
 
 /**
  * Analysis Service
@@ -23,6 +24,7 @@ export class AnalysisService {
     private prisma: PrismaService,
     private pipelineTracking: PipelineTrackingService,
     private featureFactory: FeatureFactoryService,
+    private sectorService: SectorService,
   ) {}
 
   /**
@@ -152,11 +154,33 @@ export class AnalysisService {
     try {
       await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.RUNNING);
 
-      // TODO: Implement sector selection logic
-      this.logger.log(`[SECTOR_SELECTOR] Job ${jobRun.id} - Placeholder`);
+      this.logger.log(`[SECTOR_SELECTOR] Job ${jobRun.id} - Starting sector analysis`);
+
+      // Calculate sector strengths for each market
+      const markets = [Market.US, Market.TASE];
+      let totalSectors = 0;
+      
+      for (const market of markets) {
+        const strengths = await this.sectorService.calculateSectorStrength(date, market);
+        
+        if (strengths.length > 0) {
+          // Save to daily_sector_lists
+          await this.sectorService.saveDailySectorList(date, market, strengths);
+          totalSectors += strengths.length;
+          
+          this.logger.log(
+            `[SECTOR_SELECTOR] ${market}: ${strengths.length} sectors analyzed, ` +
+            `top sector: ${strengths[0]?.sector} (score: ${strengths[0]?.score})`
+          );
+        } else {
+          this.logger.warn(`[SECTOR_SELECTOR] No sectors found for ${market}`);
+        }
+      }
 
       await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.COMPLETED, {
-        message: 'Sector selector placeholder - not yet implemented',
+        totalSectors,
+        markets: markets.length,
+        date: date.toISOString(),
       });
     } catch (error) {
       await this.pipelineTracking.updateJobStatus(jobRun.id, JobStatus.FAILED, null, error.message);
