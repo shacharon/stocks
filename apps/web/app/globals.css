@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-gray-800;
+  }
+  
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-700 rounded-md;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-600;
+}
+
+/* Profit/Loss colors */
+.profit {
+  @apply text-green-500;
+}
+
+.loss {
+  @apply text-red-500;
+}
+
+/* Signal badges */
+.signal-strong-buy {
+  @apply bg-green-500/20 text-green-400 border-green-500/50;
+}
+
+.signal-buy {
+  @apply bg-green-500/10 text-green-300 border-green-500/30;
+}
+
+.signal-hold {
+  @apply bg-yellow-500/10 text-yellow-300 border-yellow-500/30;
+}
+
+.signal-sell {
+  @apply bg-red-500/10 text-red-300 border-red-500/30;
+}
+
+.signal-strong-sell {
+  @apply bg-red-500/20 text-red-400 border-red-500/50;
+}
+

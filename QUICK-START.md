@@ -1,120 +1,46 @@
-# Quick Start Guide
+# ⚡ Quick Start - 30 Seconds to Launch
 
-## 🎉 Baby Step 1 Complete!
+## 🚀 Fastest Way to Run
 
-The workspace structure is ready. Here's what to do next:
+1. **Make sure Docker Desktop is running**
 
----
+2. **Double-click this file:**
+   ```
+   start.bat
+   ```
 
-## ⚡ Fast Track (3 Commands)
+3. **Wait 15 seconds**, then open:
+   ```
+   http://localhost:3000
+   ```
 
-```bash
-# 1. Install pnpm (if not installed)
-npm install -g pnpm@8.15.0
-
-# 2. Install all dependencies
-cd c:\dev\stocks
-pnpm install
-
-# 3. Verify installation
-pnpm -r list
-```
+4. **Done!** 🎉
 
 ---
 
-## 📚 Documentation Map
+## 🎯 What You'll See
 
-Read these in order:
+### Beautiful Dark Dashboard
+- Real-time stats from your backend
+- 5 stocks tracked (AAPL, MSFT, GOOGL, JPM, JNJ)
+- 139 historical bars from Stooq.com
+- 2 portfolios ready
 
-1. **[README.md](README.md)** - Project overview & quick reference
-2. **[PROJECT-STARTUP.md](PROJECT-STARTUP.md)** - Complete system architecture (5,700 words)
-3. **[BABY-STEPS.md](BABY-STEPS.md)** - Implementation roadmap (10 steps)
-4. **[BABY-STEP-1-COMPLETE.md](BABY-STEP-1-COMPLETE.md)** - What we just did
-
----
-
-## 🎯 Current Status
-
-✅ **Baby Step 1 Complete** - Monorepo structure created  
-✅ **Baby Step 2 Complete** - Docker infrastructure (Postgres + Redis)  
-⚪ **Baby Step 3 Ready** - Prisma schema (6 core tables)
+### Click "Stocks" → "JPM"
+**See REAL technical analysis:**
+- Price: $243.14
+- RSI: 46.45
+- MACD: -3.81
+- 15 indicators total!
 
 ---
 
-## 📁 What Was Created
+## 🛑 To Stop
 
-```
-stocks/
-├── package.json              (workspace root)
-├── pnpm-workspace.yaml       (workspace config)
-├── tsconfig.json             (strict TypeScript)
-├── .env                      (environment variables)
-├── .gitignore                (git rules)
-│
-├── apps/
-│   ├── worker/               (NestJS + BullMQ)
-│   └── web/                  (Next.js 14)
-│
-└── packages/
-    ├── shared/               (TypeScript contracts)
-    └── database/             (Prisma schema)
-```
-
-**Total**: 15 files created
+Double-click: `stop.bat`
 
 ---
 
-## 🔧 Key Decisions Made
+## 📚 Full Documentation
 
-- ✅ **IDs**: UUID
-- ✅ **Project Name**: "stocks"
-- ✅ **CSV Library**: csv-parse
-- ✅ **TypeScript**: Strict mode
-- ✅ **Package Manager**: pnpm
-
----
-
-## 🚀 Next Actions
-
-### Option 1: Install & Continue (Recommended)
-```bash
-# Install pnpm
-npm install -g pnpm@8.15.0
-
-# Install dependencies
-cd c:\dev\stocks
-pnpm install
-
-# Then say: "Start Baby Step 2"
-```
-
-### Option 2: Review First
-Read the documentation files, then come back to install.
-
-### Option 3: Discuss
-Ask questions about:
-- Architecture decisions
-- Database design
-- Module breakdown
-- Implementation approach
-
----
-
-## 💡 What's Next: Baby Step 2
-
-**Creates**: Docker Compose for local development  
-**Time**: 5 minutes  
-**Adds**: PostgreSQL 15 + Redis 7 containers
-
----
-
-## 📞 Need Help?
-
-- **Structure questions**: See [PROJECT-STARTUP.md](PROJECT-STARTUP.md)
-- **Implementation details**: See [BABY-STEPS.md](BABY-STEPS.md)
-- **Step 1 details**: See [BABY-STEP-1-COMPLETE.md](BABY-STEP-1-COMPLETE.md)
-
----
-
-**Ready?** Install pnpm, run `pnpm install`, then say **"Start Baby Step 2"**! 🚀
-
+See: `RUN-OUTSIDE-CURSOR.md`
