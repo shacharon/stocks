@@ -5,7 +5,7 @@ import { FeatureFactoryService } from './feature-factory.service';
 import { ChangeDetectorService } from './change-detector.service';
 import { DeepDiveService } from './deep-dive.service';
 import { SectorService } from '../sector/sector.service';
-import { JobType, PipelineStatus, JobStatus, Market } from '@stocks/shared';
+import { JobType, PipelineStatus, JobStatus, Market, num } from '@stocks/shared';
 
 /**
  * Analysis Service
@@ -230,7 +230,6 @@ export class AnalysisService {
       } else {
         // No specific portfolio - analyze all portfolios
         const portfolios = await this.prisma.portfolio.findMany({
-          where: { isActive: true },
           select: { id: true, name: true },
         });
 
@@ -290,16 +289,13 @@ export class AnalysisService {
       this.logger.log(`[DEEP_DIVE] Job ${jobRun.id} - Starting deep dive analysis`);
 
       // Get decisions with STRONG_BUY or STRONG_SELL signals
-      const flaggedDecisions = await this.prisma.portfolioDailyDecisions.findMany({
+      const flaggedDecisions = await this.prisma.portfolioDecision.findMany({
         where: {
           date,
           portfolioId: portfolioId || undefined,
           signal: {
             in: ['STRONG_BUY', 'STRONG_SELL'],
           },
-        },
-        include: {
-          symbol: true,
         },
       });
 
@@ -315,14 +311,24 @@ export class AnalysisService {
 
       for (const decision of flaggedDecisions) {
         try {
+          // Fetch symbol info
+          const symbol = await this.prisma.symbolUniverse.findUnique({
+            where: { id: decision.symbolId },
+          });
+
+          if (!symbol) {
+            this.logger.warn(`Symbol ${decision.symbolId} not found, skipping deep dive`);
+            continue;
+          }
+
           // Generate deep dive report
           const report = await this.deepDive.generateReport(
-            decision.symbol.symbol,
-            decision.symbol.market as Market,
+            symbol.symbol,
+            symbol.market as Market,
             date,
             decision.signal,
-            decision.confidence,
-            decision.reasons
+            decision.confidence as any,
+            decision.reasons as any
           );
 
           // Save report
@@ -332,11 +338,11 @@ export class AnalysisService {
           reportSummary[decision.signal] = (reportSummary[decision.signal] || 0) + 1;
 
           this.logger.log(
-            `[DEEP_DIVE] Generated report for ${decision.symbol.symbol}: ${decision.signal} (${decision.confidence}%)`
+            `[DEEP_DIVE] Generated report for ${symbol.symbol}: ${decision.signal} (${num(decision.confidence)}%)`
           );
         } catch (error) {
           this.logger.error(
-            `[DEEP_DIVE] Failed to generate report for ${decision.symbol.symbol}: ${error.message}`
+            `[DEEP_DIVE] Failed to generate report for symbol ${decision.symbolId}: ${error.message}`
           );
         }
       }

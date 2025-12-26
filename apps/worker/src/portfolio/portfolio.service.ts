@@ -146,7 +146,7 @@ export class PortfolioService {
     }
 
     // Validate symbol exists in universe
-    const symbol = await this.prisma.symbolUniverse.findUnique({
+    const symbolRecord = await this.prisma.symbolUniverse.findUnique({
       where: {
         symbol_market: {
           symbol: dto.symbol,
@@ -155,7 +155,7 @@ export class PortfolioService {
       },
     });
 
-    if (!symbol) {
+    if (!symbolRecord) {
       throw new BadRequestException(
         `Symbol ${dto.symbol} (${dto.market}) not found in universe. Add it first.`,
       );
@@ -165,8 +165,7 @@ export class PortfolioService {
     const position = await this.prisma.portfolioPosition.create({
       data: {
         portfolioId,
-        symbol: dto.symbol,
-        market: dto.market as Market,
+        symbolId: symbolRecord.id,
         buyPrice: dto.buyPrice,
         ...(dto.quantity !== undefined && { quantity: dto.quantity }),
         ...(dto.notes && { notes: dto.notes }),
@@ -276,23 +275,25 @@ export class PortfolioService {
     // Validate portfolio exists
     const portfolio = await this.getPortfolioById(portfolioId);
 
-    const [totalPositions, markets] = await Promise.all([
-      this.prisma.portfolioPosition.count({ where: { portfolioId } }),
-      this.prisma.portfolioPosition.groupBy({
-        by: ['market'],
-        where: { portfolioId },
-        _count: true,
-      }),
-    ]);
+    const totalPositions = await this.prisma.portfolioPosition.count({ where: { portfolioId } });
+    
+    // Get all positions with symbol info to calculate market distribution
+    const positions = await this.prisma.portfolioPosition.findMany({
+      where: { portfolioId },
+      include: { symbol: true },
+    });
+
+    const byMarket: Record<string, number> = {};
+    for (const pos of positions) {
+      const market = pos.symbol.market;
+      byMarket[market] = (byMarket[market] || 0) + 1;
+    }
 
     return {
       portfolioId,
       portfolioName: portfolio.name,
       totalPositions,
-      byMarket: markets.reduce((acc, m) => {
-        acc[m.market] = m._count;
-        return acc;
-      }, {} as Record<string, number>),
+      byMarket,
     };
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { calculateFeatures } from './indicators/technical-indicators';
-import type { Market } from '@stocks/shared';
+import { Market, num } from '@stocks/shared';
 
 @Injectable()
 export class FeatureFactoryService {
@@ -45,8 +45,18 @@ export class FeatureFactoryService {
 
       this.logger.debug(`Found ${bars.length} bars for ${symbol}`);
 
+      // Convert Prisma bars to plain objects with numbers for calculation
+      const barsForCalculation = bars.map(bar => ({
+        date: bar.date,
+        open: num(bar.open),
+        high: num(bar.high),
+        low: num(bar.low),
+        close: num(bar.close),
+        volume: Number(bar.volume),
+      }));
+
       // Calculate technical features
-      const features = calculateFeatures(bars);
+      const features = calculateFeatures(barsForCalculation);
 
       // Get the latest bar for price data
       const latestBar = bars[bars.length - 1];
@@ -64,43 +74,42 @@ export class FeatureFactoryService {
           symbol,
           market,
           date: runDate,
-          close: latestBar.close,
+          closePrice: latestBar.close,
           volume: latestBar.volume,
-          sma_20: features.sma_20,
-          sma_50: features.sma_50,
-          sma_200: features.sma_200,
-          ema_12: features.ema_12,
-          ema_26: features.ema_26,
-          rsi_14: features.rsi_14,
+          sma20: features.sma_20,
+          sma50: features.sma_50,
+          sma200: features.sma_200,
+          ema12: features.ema_12,
+          ema26: features.ema_26,
+          rsi14: features.rsi_14,
           macd: features.macd,
-          macd_signal: features.macd_signal,
-          macd_histogram: features.macd_histogram,
-          bb_upper: features.bb_upper,
-          bb_middle: features.bb_middle,
-          bb_lower: features.bb_lower,
-          atr_14: features.atr_14,
-          volume_sma_20: features.volume_sma_20,
-          volume_ratio: features.volume_ratio,
+          macdSignal: features.macd_signal,
+          macdHistogram: features.macd_histogram,
+          bbUpper: features.bb_upper,
+          bbMiddle: features.bb_middle,
+          bbLower: features.bb_lower,
+          atr14: features.atr_14,
+          volumeSma20: features.volume_sma_20,
+          volumeRatio: features.volume_ratio,
         },
         update: {
-          close: latestBar.close,
+          closePrice: latestBar.close,
           volume: latestBar.volume,
-          sma_20: features.sma_20,
-          sma_50: features.sma_50,
-          sma_200: features.sma_200,
-          ema_12: features.ema_12,
-          ema_26: features.ema_26,
-          rsi_14: features.rsi_14,
+          sma20: features.sma_20,
+          sma50: features.sma_50,
+          sma200: features.sma_200,
+          ema12: features.ema_12,
+          ema26: features.ema_26,
+          rsi14: features.rsi_14,
           macd: features.macd,
-          macd_signal: features.macd_signal,
-          macd_histogram: features.macd_histogram,
-          bb_upper: features.bb_upper,
-          bb_middle: features.bb_middle,
-          bb_lower: features.bb_lower,
-          atr_14: features.atr_14,
-          volume_sma_20: features.volume_sma_20,
-          volume_ratio: features.volume_ratio,
-          updatedAt: new Date(),
+          macdSignal: features.macd_signal,
+          macdHistogram: features.macd_histogram,
+          bbUpper: features.bb_upper,
+          bbMiddle: features.bb_middle,
+          bbLower: features.bb_lower,
+          atr14: features.atr_14,
+          volumeSma20: features.volume_sma_20,
+          volumeRatio: features.volume_ratio,
         },
       });
 

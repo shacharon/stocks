@@ -32,3 +32,9 @@ export * from './schemas/portfolio.schema';
 export * from './schemas/universe.schema';
 export * from './schemas/analysis.schema';
 
+// ============================================================================
+// Numeric Utilities
+// ============================================================================
+export * from './numeric';
+export type { Numeric } from './numeric';
+

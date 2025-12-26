@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import type { Market } from '@stocks/shared';
+import { Market, num, gt, lt } from '@stocks/shared';
 
 export interface StopLossCalculation {
   portfolioId: string;
@@ -50,7 +50,6 @@ export class StopLossService {
       where: {
         portfolioId,
         symbolId,
-        isActive: true,
       },
       include: {
         symbol: true,
@@ -78,9 +77,9 @@ export class StopLossService {
       );
     }
 
-    const currentPrice = features.close;
-    const buyPrice = position.buyPrice;
-    const atr = features.atr_14;
+    const currentPrice = num(features.closePrice);
+    const buyPrice = num(position.buyPrice);
+    const atr = features.atr14 ? num(features.atr14) : null;
 
     // Get existing stop-loss state (if any)
     const existingState = await this.prisma.stopRulesState.findUnique({
@@ -95,7 +94,7 @@ export class StopLossService {
     // Calculate initial stop-loss (if no existing state)
     let initialStopLoss: number;
     if (existingState) {
-      initialStopLoss = existingState.initialStopLoss;
+      initialStopLoss = num(existingState.initialStopLoss);
     } else {
       initialStopLoss = buyPrice * (1 - this.DEFAULT_STOP_PERCENT);
     }
@@ -135,8 +134,9 @@ export class StopLossService {
 
     if (existingState) {
       // Never decrease the stop-loss
-      currentStopLoss = Math.max(existingState.currentStopLoss, recommendedStopLoss);
-      shouldUpdate = recommendedStopLoss > existingState.currentStopLoss;
+      const existingStop = num(existingState.currentStopLoss);
+      currentStopLoss = Math.max(existingStop, recommendedStopLoss);
+      shouldUpdate = recommendedStopLoss > existingStop;
     } else {
       // First time: use recommended or initial, whichever is higher
       currentStopLoss = Math.max(initialStopLoss, recommendedStopLoss);
@@ -145,7 +145,7 @@ export class StopLossService {
 
     // Calculate metrics
     const stopLossPercent = ((currentPrice - currentStopLoss) / currentPrice) * 100;
-    const riskAmount = (currentPrice - currentStopLoss) * position.quantity;
+    const riskAmount = (currentPrice - currentStopLoss) * num(position.quantity);
 
     return {
       portfolioId,
@@ -223,11 +223,10 @@ export class StopLossService {
   }> {
     this.logger.log(`Updating stop-losses for portfolio ${portfolioId} on ${date.toISOString()}`);
 
-    // Get all active positions
+    // Get all positions
     const positions = await this.prisma.portfolioPosition.findMany({
       where: {
         portfolioId,
-        isActive: true,
       },
       include: {
         symbol: true,
@@ -331,7 +330,6 @@ export class StopLossService {
       },
       include: {
         symbol: true,
-        position: true,
       },
     });
 
@@ -355,21 +353,21 @@ export class StopLossService {
         },
       });
 
-      if (features && features.close < state.currentStopLoss) {
-        const violationAmount = state.currentStopLoss - features.close;
-        const violationPercent = (violationAmount / state.currentStopLoss) * 100;
+      if (features && lt(features.closePrice, state.currentStopLoss)) {
+        const violationAmount = num(state.currentStopLoss) - num(features.closePrice);
+        const violationPercent = (violationAmount / num(state.currentStopLoss)) * 100;
 
         violations.push({
           symbol: state.symbol.symbol,
-          currentPrice: features.close,
-          stopLoss: state.currentStopLoss,
+          currentPrice: num(features.closePrice),
+          stopLoss: num(state.currentStopLoss),
           violationAmount: Number(violationAmount.toFixed(2)),
           violationPercent: Number(violationPercent.toFixed(2)),
         });
 
         this.logger.warn(
-          `STOP LOSS VIOLATED: ${state.symbol.symbol} @ ${features.close} ` +
-          `(stop: ${state.currentStopLoss}, violation: ${violationPercent.toFixed(2)}%)`
+          `STOP LOSS VIOLATED: ${state.symbol.symbol} @ ${num(features.closePrice)} ` +
+          `(stop: ${num(state.currentStopLoss)}, violation: ${violationPercent.toFixed(2)}%)`
         );
       }
     }
@@ -398,7 +396,6 @@ export class StopLossService {
       this.prisma.stopRulesState.findMany({
         include: {
           symbol: true,
-          position: true,
         },
       }),
     ]);
@@ -409,17 +406,8 @@ export class StopLossService {
     }
 
     // Calculate average stop-loss percentage
-    let avgStopPercent: number | null = null;
-    if (avgData.length > 0) {
-      const totalPercent = avgData.reduce((sum, state) => {
-        const position = state.position.find((p) => p.symbolId === state.symbolId);
-        if (!position) return sum;
-
-        // Need current price to calculate percentage - skip for now
-        return sum;
-      }, 0);
-      // avgStopPercent = totalPercent / avgData.length;
-    }
+    // Note: Would need current prices to calculate accurately
+    const avgStopPercent: number | null = null;
 
     return {
       totalStops,

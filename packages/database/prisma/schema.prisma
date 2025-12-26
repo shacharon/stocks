@@ -18,11 +18,15 @@ model Portfolio {
   id          String   @id @default(uuid()) @db.Uuid
   name        String   @db.VarChar(255)
   description String?  @db.Text
+  currency    String   @default("USD") @db.VarChar(10)
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  positions PortfolioPosition[]
+  positions  PortfolioPosition[]
+  decisions  PortfolioDecision[]
+  stopStates StopRulesState[]
+  deltas     DailyDelta[]
 
   @@map("portfolios")
 }
@@ -30,21 +34,19 @@ model Portfolio {
 model PortfolioPosition {
   id          String   @id @default(uuid()) @db.Uuid
   portfolioId String   @map("portfolio_id") @db.Uuid
-  symbol      String   @db.VarChar(50)
-  market      Market
+  symbolId    String   @map("symbol_id") @db.Uuid
   buyPrice    Decimal  @map("buy_price") @db.Decimal(12, 4)
-  quantity    Decimal? @db.Decimal(12, 4)
+  quantity    Decimal  @db.Decimal(12, 4)
   notes       String?  @db.Text
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  portfolio     Portfolio           @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
-  stopRuleState StopRulesState?
-  decisions     PortfolioDecision[]
+  portfolio Portfolio      @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  symbol    SymbolUniverse @relation(fields: [symbolId], references: [id], onDelete: Restrict)
 
   @@index([portfolioId])
-  @@index([symbol, market])
+  @@index([symbolId])
   @@map("portfolio_positions")
 }
 
@@ -60,6 +62,11 @@ model SymbolUniverse {
   addedAt     DateTime @default(now()) @map("added_at") @db.Timestamptz(6)
   lastUpdated DateTime @updatedAt @map("last_updated") @db.Timestamptz(6)
 
+  // Relations
+  positions     PortfolioPosition[]
+  sectorMapping SymbolSectorMap?
+  stopStates    StopRulesState[]
+
   @@unique([symbol, market])
   @@index([isActive])
   @@map("symbol_universe")
@@ -67,10 +74,13 @@ model SymbolUniverse {
 
 model SymbolSectorMap {
   id          String   @id @default(uuid()) @db.Uuid
-  symbol      String   @unique @db.VarChar(50)
+  symbolId    String   @unique @map("symbol_id") @db.Uuid
   sector      String   @db.VarChar(100)
   industry    String?  @db.VarChar(100)
   lastUpdated DateTime @updatedAt @map("last_updated") @db.Timestamptz(6)
+
+  // Relations
+  symbol SymbolUniverse @relation(fields: [symbolId], references: [id], onDelete: Cascade)
 
   @@index([sector])
   @@map("symbol_sector_map")
@@ -81,13 +91,13 @@ model SymbolSectorMap {
 // ============================================================================
 
 model PipelineRun {
-  id          String         @id @default(uuid()) @db.Uuid
-  runDate     DateTime       @unique @map("run_date") @db.Date
-  status      PipelineStatus @default(PENDING)
-  startedAt   DateTime?      @map("started_at") @db.Timestamptz(6)
-  completedAt DateTime?      @map("completed_at") @db.Timestamptz(6)
-  errorMessage String?       @map("error_message") @db.Text
-  metadata    Json?          @db.JsonB
+  id           String         @id @default(uuid()) @db.Uuid
+  runDate      DateTime       @unique @map("run_date") @db.Date
+  status       PipelineStatus @default(PENDING)
+  startedAt    DateTime?      @map("started_at") @db.Timestamptz(6)
+  completedAt  DateTime?      @map("completed_at") @db.Timestamptz(6)
+  errorMessage String?        @map("error_message") @db.Text
+  metadata     Json?          @db.JsonB
 
   // Relations
   jobRuns JobRun[]
@@ -97,15 +107,15 @@ model PipelineRun {
 }
 
 model JobRun {
-  id             String      @id @default(uuid()) @db.Uuid
-  pipelineRunId  String      @map("pipeline_run_id") @db.Uuid
-  jobType        JobType     @map("job_type")
-  status         JobStatus   @default(PENDING)
-  startedAt      DateTime?   @map("started_at") @db.Timestamptz(6)
-  completedAt    DateTime?   @map("completed_at") @db.Timestamptz(6)
-  errorMessage   String?     @map("error_message") @db.Text
-  inputData      Json?       @map("input_data") @db.JsonB
-  outputData     Json?       @map("output_data") @db.JsonB
+  id            String    @id @default(uuid()) @db.Uuid
+  pipelineRunId String    @map("pipeline_run_id") @db.Uuid
+  jobType       JobType   @map("job_type")
+  status        JobStatus @default(PENDING)
+  startedAt     DateTime? @map("started_at") @db.Timestamptz(6)
+  completedAt   DateTime? @map("completed_at") @db.Timestamptz(6)
+  errorMessage  String?   @map("error_message") @db.Text
+  inputData     Json?     @map("input_data") @db.JsonB
+  outputData    Json?     @map("output_data") @db.JsonB
 
   // Relations
   pipelineRun PipelineRun @relation(fields: [pipelineRunId], references: [id], onDelete: Cascade)
@@ -144,38 +154,53 @@ model MarketDailyBar {
 // ============================================================================
 
 model DailySymbolFeatures {
-  id              String   @id @default(uuid()) @db.Uuid
-  symbol          String   @db.VarChar(50)
-  market          Market
-  date            DateTime @db.Date
-  
-  // Price data
-  closePrice      Decimal  @map("close_price") @db.Decimal(12, 4)
-  
-  // Indicators
-  sma20           Decimal? @map("sma_20") @db.Decimal(12, 4)
-  sma50           Decimal? @map("sma_50") @db.Decimal(12, 4)
-  rsi14           Decimal? @map("rsi_14") @db.Decimal(8, 4)
-  atr14           Decimal? @map("atr_14") @db.Decimal(12, 4)
-  volumeAvg20     BigInt?  @map("volume_avg_20")
-  
-  // Levels
-  supportLevels   Json?    @map("support_levels") @db.JsonB
-  resistanceLevels Json?   @map("resistance_levels") @db.JsonB
-  
-  // Regime
-  trend           String?  @db.VarChar(20)
-  volatilityState String?  @map("volatility_state") @db.VarChar(20)
-  
-  // Engine metadata
-  engineVersion   String   @map("engine_version") @db.VarChar(20)
-  confidence      Decimal? @db.Decimal(4, 3)
-  reasons         Json?    @db.JsonB
-  
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  id        String   @id @default(uuid()) @db.Uuid
+  symbol    String   @db.VarChar(50)
+  market    Market
+  date      DateTime @db.Date
 
-  // Relations
-  portfolioDecisions PortfolioDecision[]
+  // Price data
+  closePrice Decimal @map("close_price") @db.Decimal(12, 4)
+  volume     BigInt?
+
+  // Moving Averages
+  sma20  Decimal? @map("sma_20") @db.Decimal(12, 4)
+  sma50  Decimal? @map("sma_50") @db.Decimal(12, 4)
+  sma200 Decimal? @map("sma_200") @db.Decimal(12, 4)
+  ema12  Decimal? @map("ema_12") @db.Decimal(12, 4)
+  ema26  Decimal? @map("ema_26") @db.Decimal(12, 4)
+
+  // Momentum Indicators
+  rsi14         Decimal? @map("rsi_14") @db.Decimal(8, 4)
+  macd          Decimal? @db.Decimal(12, 4)
+  macdSignal    Decimal? @map("macd_signal") @db.Decimal(12, 4)
+  macdHistogram Decimal? @map("macd_histogram") @db.Decimal(12, 4)
+
+  // Volatility Indicators
+  atr14    Decimal? @map("atr_14") @db.Decimal(12, 4)
+  bbUpper  Decimal? @map("bb_upper") @db.Decimal(12, 4)
+  bbMiddle Decimal? @map("bb_middle") @db.Decimal(12, 4)
+  bbLower  Decimal? @map("bb_lower") @db.Decimal(12, 4)
+
+  // Volume Indicators
+  volumeAvg20 BigInt?  @map("volume_avg_20")
+  volumeSma20 BigInt?  @map("volume_sma_20")
+  volumeRatio Decimal? @map("volume_ratio") @db.Decimal(8, 4)
+
+  // Levels
+  supportLevels    Json? @map("support_levels") @db.JsonB
+  resistanceLevels Json? @map("resistance_levels") @db.JsonB
+
+  // Regime
+  trend           String? @db.VarChar(20)
+  volatilityState String? @map("volatility_state") @db.VarChar(20)
+
+  // Engine metadata
+  engineVersion String   @default("1.0.0") @map("engine_version") @db.VarChar(20)
+  confidence    Decimal? @db.Decimal(4, 3)
+  reasons       Json?    @db.JsonB
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@unique([symbol, market, date])
   @@index([symbol, market, date(sort: Desc)])
@@ -188,52 +213,55 @@ model DailySymbolFeatures {
 // ============================================================================
 
 model PortfolioDecision {
-  id               String   @id @default(uuid()) @db.Uuid
-  positionId       String   @map("position_id") @db.Uuid
-  date             DateTime @db.Date
-  
+  id           String   @id @default(uuid()) @db.Uuid
+  portfolioId  String   @map("portfolio_id") @db.Uuid
+  symbolId     String   @map("symbol_id") @db.Uuid
+  market       Market
+  date         DateTime @db.Date
+
   // Context
-  buyPrice         Decimal  @map("buy_price") @db.Decimal(12, 4)
-  currentPrice     Decimal  @map("current_price") @db.Decimal(12, 4)
-  
-  // Stop-loss (NEVER DECREASES)
-  suggestedStop    Decimal  @map("suggested_stop") @db.Decimal(12, 4)
-  prevStop         Decimal? @map("prev_stop") @db.Decimal(12, 4)
-  stopDistancePct  Decimal? @map("stop_distance_pct") @db.Decimal(6, 3)
-  
-  // Action
-  action           Action
-  actionConfidence Decimal? @map("action_confidence") @db.Decimal(4, 3)
-  actionReasons    Json?    @map("action_reasons") @db.JsonB
-  
-  // Reference to universal features
-  featureId        String?  @map("feature_id") @db.Uuid
-  
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  buyPrice     Decimal @map("buy_price") @db.Decimal(12, 4)
+  currentPrice Decimal @map("current_price") @db.Decimal(12, 4)
+
+  // Signal
+  signal     String  @db.VarChar(20) // STRONG_BUY, BUY, HOLD, SELL, STRONG_SELL
+  confidence Decimal @db.Decimal(5, 2)
+  reasons    Json    @db.JsonB
+
+  // Stop-loss
+  suggestedStop Decimal @map("suggested_stop") @db.Decimal(12, 4)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   // Relations
-  position PortfolioPosition   @relation(fields: [positionId], references: [id], onDelete: Cascade)
-  feature  DailySymbolFeatures? @relation(fields: [featureId], references: [id], onDelete: SetNull)
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
 
-  @@unique([positionId, date])
-  @@index([positionId, date(sort: Desc)])
+  @@unique([portfolioId, symbolId, date])
+  @@index([portfolioId, date(sort: Desc)])
   @@index([date(sort: Desc)])
-  @@index([action])
+  @@index([signal])
   @@map("portfolio_daily_decisions")
 }
 
 model StopRulesState {
-  id           String   @id @default(uuid()) @db.Uuid
-  positionId   String   @unique @map("position_id") @db.Uuid
-  currentStop  Decimal  @map("current_stop") @db.Decimal(12, 4)
-  lastMovedAt  DateTime @map("last_moved_at") @db.Date
-  history      Json?    @db.JsonB
-  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id              String   @id @default(uuid()) @db.Uuid
+  portfolioId     String   @map("portfolio_id") @db.Uuid
+  symbolId        String   @map("symbol_id") @db.Uuid
+  initialStopLoss Decimal  @map("initial_stop_loss") @db.Decimal(12, 4)
+  currentStopLoss Decimal  @map("current_stop_loss") @db.Decimal(12, 4)
+  lastUpdatedDate DateTime @map("last_updated_date") @db.Date
+  stopLossType    String   @map("stop_loss_type") @db.VarChar(50)
+  atrMultiplier   Decimal  @map("atr_multiplier") @db.Decimal(6, 2)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  position PortfolioPosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  portfolio Portfolio      @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  symbol    SymbolUniverse @relation(fields: [symbolId], references: [id], onDelete: Cascade)
 
-  @@index([positionId])
+  @@unique([portfolioId, symbolId])
+  @@index([portfolioId])
+  @@index([symbolId])
   @@map("stop_rules_state")
 }
 
@@ -242,16 +270,19 @@ model StopRulesState {
 // ============================================================================
 
 model DailySectorList {
-  id              String   @id @default(uuid()) @db.Uuid
-  date            DateTime @db.Date
-  sector          String   @db.VarChar(100)
-  symbolList      Json     @map("symbol_list") @db.JsonB
-  rankingCriteria Json?    @map("ranking_criteria") @db.JsonB
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  id          String   @id @default(uuid()) @db.Uuid
+  date        DateTime @db.Date
+  market      Market
+  sector      String   @db.VarChar(100)
+  rank        Int
+  score       Decimal  @db.Decimal(8, 4)
+  symbolCount Int      @map("symbol_count")
+  metrics     Json     @db.JsonB
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  @@unique([date, sector])
+  @@unique([date, market, sector])
   @@index([date(sort: Desc)])
-  @@index([sector])
+  @@index([market, date(sort: Desc)])
   @@map("daily_sector_lists")
 }
 
@@ -264,28 +295,39 @@ model DeepDiveReport {
   symbol     String   @db.VarChar(50)
   market     Market
   date       DateTime @db.Date
+  signal     String   @db.VarChar(20)
+  confidence Decimal  @db.Decimal(5, 2)
   reportData Json     @map("report_data") @db.JsonB
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@unique([symbol, market, date])
   @@index([symbol, market, date(sort: Desc)])
+  @@index([signal])
+  @@index([date(sort: Desc)])
   @@map("deep_dive_reports")
 }
 
 model DailyDelta {
-  id               String   @id @default(uuid()) @db.Uuid
-  symbol           String   @db.VarChar(50)
-  market           Market
-  date             DateTime @db.Date
-  changeType       String   @map("change_type") @db.VarChar(50)
-  oldValue         Json?    @map("old_value") @db.JsonB
-  newValue         Json?    @map("new_value") @db.JsonB
-  materialityScore Decimal? @map("materiality_score") @db.Decimal(4, 3)
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  id              String   @id @default(uuid()) @db.Uuid
+  date            DateTime @db.Date
+  portfolioId     String?  @map("portfolio_id") @db.Uuid
+  market          Market?
 
-  @@unique([symbol, market, date, changeType])
-  @@index([date(sort: Desc), materialityScore(sort: Desc)])
-  @@index([symbol, market])
+  // Summaries (stored as JSON)
+  priceChanges    Json   @map("price_changes") @db.JsonB
+  signalChanges   Json   @map("signal_changes") @db.JsonB
+  stopLossChanges Json   @map("stop_loss_changes") @db.JsonB
+  newActivity     Json   @map("new_activity") @db.JsonB
+  summary         String @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  portfolio Portfolio? @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@unique([date, portfolioId])
+  @@index([date(sort: Desc)])
+  @@index([portfolioId])
   @@map("daily_deltas")
 }
 
@@ -296,13 +338,6 @@ model DailyDelta {
 enum Market {
   US
   TASE
-}
-
-enum Action {
-  HOLD
-  MOVE_STOP
-  REDUCE
-  EXIT
 }
 
 enum PipelineStatus {
@@ -326,6 +361,3 @@ enum JobType {
   CHANGE_DETECTOR
   DEEP_DIVE
 }
-
-
-

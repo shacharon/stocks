@@ -207,6 +207,9 @@ importers:
         specifier: ^3.22.4
         version: 3.25.76
     devDependencies:
+      '@prisma/client':
+        specifier: ^5.8.0
+        version: 5.22.0(prisma@5.22.0)
       '@types/node':
         specifier: ^20.11.0
         version: 20.19.27
@@ -1402,7 +1405,6 @@ packages:
         optional: true
     dependencies:
       prisma: 5.22.0
-    dev: false
 
   /@prisma/debug@5.22.0:
     resolution: {integrity: sha512-AUt44v3YJeggO2ZU5BkXI7M4hu9BF2zzH2iF2V5pyXT/lRTyWiElZ7It+bRH1EshoMRxHgpYg4VB6rCM+mG5jQ==}

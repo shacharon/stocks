@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import type { Market } from '@stocks/shared';
+import { Market, num, pctDiff } from '@stocks/shared';
 
 export interface SectorStrength {
   sector: string;
@@ -211,11 +211,15 @@ export class SectorService {
       }
 
       // Calculate sector metrics
-      const rsiValues = features.filter((f) => f.rsi_14 !== null).map((f) => f.rsi_14!);
+      const rsiValues = features
+        .filter((f) => f.rsi14 !== null)
+        .map((f) => num(f.rsi14!));
       const sma20DistValues = features
-        .filter((f) => f.close !== null && f.sma_20 !== null)
-        .map((f) => ((f.close - f.sma_20!) / f.sma_20!) * 100);
-      const volRatioValues = features.filter((f) => f.volume_ratio !== null).map((f) => f.volume_ratio!);
+        .filter((f) => f.closePrice !== null && f.sma20 !== null)
+        .map((f) => pctDiff(f.closePrice, f.sma20!));
+      const volRatioValues = features
+        .filter((f) => f.volumeRatio !== null)
+        .map((f) => num(f.volumeRatio!));
 
       const avgRsi = rsiValues.length > 0 ? rsiValues.reduce((a, b) => a + b, 0) / rsiValues.length : null;
       const avgSma20Dist =
@@ -279,11 +283,11 @@ export class SectorService {
     this.logger.log(`Saving sector list for ${market} on ${date.toISOString()}`);
 
     for (const [rank, strength] of sectorStrengths.entries()) {
-      await this.prisma.dailySectorLists.upsert({
+      await this.prisma.dailySectorList.upsert({
         where: {
-          market_date_sector: {
-            market,
+          date_market_sector: {
             date,
+            market,
             sector: strength.sector,
           },
         },
@@ -294,18 +298,21 @@ export class SectorService {
           rank: rank + 1,
           score: strength.score,
           symbolCount: strength.symbolCount,
-          avgRsi: strength.avgRsi,
-          avgSma20Dist: strength.avgSma20Dist,
-          avgVolRatio: strength.avgVolRatio,
+          metrics: {
+            avgRsi: strength.avgRsi,
+            avgSma20Dist: strength.avgSma20Dist,
+            avgVolRatio: strength.avgVolRatio,
+          },
         },
         update: {
           rank: rank + 1,
           score: strength.score,
           symbolCount: strength.symbolCount,
-          avgRsi: strength.avgRsi,
-          avgSma20Dist: strength.avgSma20Dist,
-          avgVolRatio: strength.avgVolRatio,
-          updatedAt: new Date(),
+          metrics: {
+            avgRsi: strength.avgRsi,
+            avgSma20Dist: strength.avgSma20Dist,
+            avgVolRatio: strength.avgVolRatio,
+          },
         },
       });
     }
@@ -317,7 +324,7 @@ export class SectorService {
    * Get daily sector list
    */
   async getDailySectorList(date: Date, market?: Market, topN?: number): Promise<any[]> {
-    const sectorList = await this.prisma.dailySectorLists.findMany({
+    const sectorList = await this.prisma.dailySectorList.findMany({
       where: {
         date,
         market: market || undefined,
@@ -340,16 +347,16 @@ export class SectorService {
     marketCounts: Record<string, number>;
   }> {
     const [totalRecords, earliest, latest, byMarket] = await Promise.all([
-      this.prisma.dailySectorLists.count(),
-      this.prisma.dailySectorLists.findFirst({
+      this.prisma.dailySectorList.count(),
+      this.prisma.dailySectorList.findFirst({
         orderBy: { date: 'asc' },
         select: { date: true },
       }),
-      this.prisma.dailySectorLists.findFirst({
+      this.prisma.dailySectorList.findFirst({
         orderBy: { date: 'desc' },
         select: { date: true },
       }),
-      this.prisma.dailySectorLists.groupBy({
+      this.prisma.dailySectorList.groupBy({
         by: ['market'],
         _count: true,
       }),

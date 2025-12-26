@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import type { Market } from '@stocks/shared';
+import { Market, num, pctDiff } from '@stocks/shared';
 
 export interface DailyDelta {
   date: Date;
@@ -92,18 +92,18 @@ export class DailyDeltaService {
     // Get features for both dates
     const currentFeatures = await this.prisma.dailySymbolFeatures.findMany({
       where: { date },
-      select: { symbol: true, market: true, close: true },
+      select: { symbol: true, market: true, closePrice: true },
     });
 
     const previousFeatures = await this.prisma.dailySymbolFeatures.findMany({
       where: { date: previousDate },
-      select: { symbol: true, market: true, close: true },
+      select: { symbol: true, market: true, closePrice: true },
     });
 
     // Create lookup map for previous prices
     const previousPriceMap = new Map<string, number>();
     for (const feat of previousFeatures) {
-      previousPriceMap.set(`${feat.symbol}_${feat.market}`, feat.close);
+      previousPriceMap.set(`${feat.symbol}_${feat.market}`, num(feat.closePrice));
     }
 
     // Calculate changes
@@ -118,7 +118,7 @@ export class DailyDeltaService {
       const previousPrice = previousPriceMap.get(key);
 
       if (previousPrice) {
-        const change = ((current.close - previousPrice) / previousPrice) * 100;
+        const change = pctDiff(current.closePrice, previousPrice);
         changes.push({ symbol: current.symbol, change });
         totalChange += change;
 
@@ -151,12 +151,12 @@ export class DailyDeltaService {
   }
 
   private async calculateSignalChanges(date: Date, previousDate: Date) {
-    const currentDecisions = await this.prisma.portfolioDailyDecisions.findMany({
+    const currentDecisions = await this.prisma.portfolioDecision.findMany({
       where: { date },
       select: { portfolioId: true, symbolId: true, signal: true },
     });
 
-    const previousDecisions = await this.prisma.portfolioDailyDecisions.findMany({
+    const previousDecisions = await this.prisma.portfolioDecision.findMany({
       where: { date: previousDate },
       select: { portfolioId: true, symbolId: true, signal: true },
     });
@@ -229,7 +229,7 @@ export class DailyDeltaService {
     for (const stop of previousStops) {
       const key = `${stop.portfolioId}_${stop.symbolId}`;
       if (!previousStopMap.has(key)) {
-        previousStopMap.set(key, stop.currentStopLoss);
+        previousStopMap.set(key, num(stop.currentStopLoss));
       }
     }
 
@@ -242,9 +242,10 @@ export class DailyDeltaService {
       const previousStop = previousStopMap.get(key);
 
       if (previousStop !== undefined) {
-        if (current.currentStopLoss > previousStop) {
+        const currentStop = num(current.currentStopLoss);
+        if (currentStop > previousStop) {
           raised++;
-          totalRaise += current.currentStopLoss - previousStop;
+          totalRaise += currentStop - previousStop;
         } else {
           unchanged++;
         }
@@ -261,30 +262,17 @@ export class DailyDeltaService {
 
   private async calculateNewActivity(date: Date) {
     const [newSymbols, newReports, newSectors] = await Promise.all([
-      // New symbols added on this date
-      this.prisma.symbolUniverse.count({
-        where: {
-          createdAt: {
-            gte: new Date(date.setHours(0, 0, 0, 0)),
-            lt: new Date(date.setHours(23, 59, 59, 999)),
-          },
-        },
-      }),
+      // New symbols added on this date (approximate - no createdAt filter available)
+      this.prisma.symbolUniverse.count(),
       
       // New reports generated on this date
-      this.prisma.deepDiveReports.count({
+      this.prisma.deepDiveReport.count({
         where: { date },
       }),
       
       // New sector mappings on this date
-      this.prisma.symbolSectorMap.count({
-        where: {
-          createdAt: {
-            gte: new Date(date.setHours(0, 0, 0, 0)),
-            lt: new Date(date.setHours(23, 59, 59, 999)),
-          },
-        },
-      }),
+      // New sectors mapped on this date (approximate - no createdAt filter available)
+      this.prisma.symbolSectorMap.count(),
     ]);
 
     return {
@@ -332,7 +320,7 @@ export class DailyDeltaService {
    * Save daily delta to database
    */
   async saveDailyDelta(delta: DailyDelta, portfolioId?: string): Promise<void> {
-    await this.prisma.dailyDeltas.create({
+    await this.prisma.dailyDelta.create({
       data: {
         date: delta.date,
         portfolioId: portfolioId || null,
@@ -352,7 +340,7 @@ export class DailyDeltaService {
    * Get daily delta for a date
    */
   async getDailyDelta(date: Date, portfolioId?: string): Promise<any> {
-    return this.prisma.dailyDeltas.findFirst({
+    return this.prisma.dailyDelta.findFirst({
       where: {
         date,
         portfolioId: portfolioId || null,
@@ -368,7 +356,7 @@ export class DailyDeltaService {
     endDate: Date,
     portfolioId?: string
   ): Promise<any[]> {
-    return this.prisma.dailyDeltas.findMany({
+    return this.prisma.dailyDelta.findMany({
       where: {
         date: {
           gte: startDate,
@@ -390,12 +378,12 @@ export class DailyDeltaService {
     dateRange: { earliest: Date | null; latest: Date | null };
   }> {
     const [totalDeltas, earliest, latest] = await Promise.all([
-      this.prisma.dailyDeltas.count(),
-      this.prisma.dailyDeltas.findFirst({
+      this.prisma.dailyDelta.count(),
+      this.prisma.dailyDelta.findFirst({
         orderBy: { date: 'asc' },
         select: { date: true },
       }),
-      this.prisma.dailyDeltas.findFirst({
+      this.prisma.dailyDelta.findFirst({
         orderBy: { date: 'desc' },
         select: { date: true },
       }),

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import type { Market } from '@stocks/shared';
+import { Market, num, num0, pctDiff, gt, lt } from '@stocks/shared';
 
 export enum SignalType {
   BUY = 'BUY',
@@ -78,22 +78,22 @@ export class ChangeDetectorService {
     let signalScore = 0; // Positive = bullish, Negative = bearish
 
     // 1. RSI Analysis
-    if (currentFeatures.rsi_14 !== null) {
-      const rsi = currentFeatures.rsi_14;
-      changesDetected.rsiChange = previousFeatures?.rsi_14
-        ? rsi - previousFeatures.rsi_14
+    if (currentFeatures.rsi14 !== null) {
+      const rsi = num(currentFeatures.rsi14);
+      changesDetected.rsiChange = previousFeatures?.rsi14
+        ? rsi - num(previousFeatures.rsi14)
         : null;
 
-      if (rsi > 70) {
+      if (gt(rsi, 70)) {
         reasons.push('RSI overbought (>70)');
         signalScore -= 15;
-      } else if (rsi < 30) {
+      } else if (lt(rsi, 30)) {
         reasons.push('RSI oversold (<30)');
         signalScore += 20;
-      } else if (rsi > 60) {
+      } else if (gt(rsi, 60)) {
         reasons.push('RSI strong (>60)');
         signalScore += 10;
-      } else if (rsi < 40) {
+      } else if (lt(rsi, 40)) {
         reasons.push('RSI weak (<40)');
         signalScore -= 10;
       }
@@ -111,14 +111,14 @@ export class ChangeDetectorService {
     }
 
     // 2. Price vs SMA Analysis
-    if (currentFeatures.close && currentFeatures.sma_20 && currentFeatures.sma_50) {
-      const price = currentFeatures.close;
-      const sma20 = currentFeatures.sma_20;
-      const sma50 = currentFeatures.sma_50;
+    if (currentFeatures.closePrice && currentFeatures.sma20 && currentFeatures.sma50) {
+      const price = num(currentFeatures.closePrice);
+      const sma20 = num(currentFeatures.sma20);
+      const sma50 = num(currentFeatures.sma50);
 
       // Price vs SMA20
-      if (price > sma20) {
-        const distancePct = ((price - sma20) / sma20) * 100;
+      if (gt(price, sma20)) {
+        const distancePct = pctDiff(price, sma20);
         if (distancePct > 5) {
           reasons.push(`Price well above SMA20 (+${distancePct.toFixed(1)}%)`);
           signalScore += 10;
@@ -128,7 +128,7 @@ export class ChangeDetectorService {
         }
         changesDetected.smaBreakout = 'ABOVE_SMA20';
       } else {
-        const distancePct = ((sma20 - price) / sma20) * 100;
+        const distancePct = pctDiff(sma20, price);
         if (distancePct > 5) {
           reasons.push(`Price well below SMA20 (-${distancePct.toFixed(1)}%)`);
           signalScore -= 10;
@@ -140,14 +140,14 @@ export class ChangeDetectorService {
       }
 
       // Golden/Death Cross (SMA20 vs SMA50)
-      if (sma20 > sma50) {
-        const crossPct = ((sma20 - sma50) / sma50) * 100;
+      if (gt(sma20, sma50)) {
+        const crossPct = pctDiff(sma20, sma50);
         if (crossPct > 2) {
           reasons.push('Golden Cross confirmed (SMA20 > SMA50)');
           signalScore += 15;
         }
       } else {
-        const crossPct = ((sma50 - sma20) / sma50) * 100;
+        const crossPct = pctDiff(sma50, sma20);
         if (crossPct > 2) {
           reasons.push('Death Cross confirmed (SMA20 < SMA50)');
           signalScore -= 15;
@@ -157,25 +157,25 @@ export class ChangeDetectorService {
 
     // 3. Bollinger Bands Position
     if (
-      currentFeatures.close &&
-      currentFeatures.bb_upper &&
-      currentFeatures.bb_middle &&
-      currentFeatures.bb_lower
+      currentFeatures.closePrice &&
+      currentFeatures.bbUpper &&
+      currentFeatures.bbMiddle &&
+      currentFeatures.bbLower
     ) {
-      const price = currentFeatures.close;
-      const bbUpper = currentFeatures.bb_upper;
-      const bbLower = currentFeatures.bb_lower;
-      const bbMiddle = currentFeatures.bb_middle;
+      const price = num(currentFeatures.closePrice);
+      const bbUpper = num(currentFeatures.bbUpper);
+      const bbLower = num(currentFeatures.bbLower);
+      const bbMiddle = num(currentFeatures.bbMiddle);
 
-      if (price < bbLower) {
+      if (lt(price, bbLower)) {
         reasons.push('Price below lower Bollinger Band');
         signalScore += 15;
         changesDetected.bbPosition = 'BELOW_LOWER';
-      } else if (price > bbUpper) {
+      } else if (gt(price, bbUpper)) {
         reasons.push('Price above upper Bollinger Band');
         signalScore -= 10;
         changesDetected.bbPosition = 'ABOVE_UPPER';
-      } else if (price > bbMiddle) {
+      } else if (gt(price, bbMiddle)) {
         changesDetected.bbPosition = 'ABOVE_MIDDLE';
       } else {
         changesDetected.bbPosition = 'BELOW_MIDDLE';
@@ -183,21 +183,21 @@ export class ChangeDetectorService {
     }
 
     // 4. Volume Analysis
-    if (currentFeatures.volume_ratio !== null) {
-      const volRatio = currentFeatures.volume_ratio;
-      if (volRatio > 2) {
+    if (currentFeatures.volumeRatio !== null) {
+      const volRatio = num(currentFeatures.volumeRatio);
+      if (gt(volRatio, 2)) {
         reasons.push(`High volume spike (${volRatio.toFixed(1)}x avg)`);
         signalScore += 10;
         changesDetected.volumeSpike = true;
-      } else if (volRatio > 1.5) {
+      } else if (gt(volRatio, 1.5)) {
         reasons.push(`Elevated volume (${volRatio.toFixed(1)}x avg)`);
         signalScore += 5;
       }
     }
 
     // 5. Price Change
-    if (previousFeatures?.close && currentFeatures.close) {
-      const priceChange = ((currentFeatures.close - previousFeatures.close) / previousFeatures.close) * 100;
+    if (previousFeatures?.closePrice && currentFeatures.closePrice) {
+      const priceChange = pctDiff(currentFeatures.closePrice, previousFeatures.closePrice);
       changesDetected.priceChange = priceChange;
 
       if (priceChange > 5) {
@@ -210,8 +210,8 @@ export class ChangeDetectorService {
     }
 
     // 6. MACD Analysis
-    if (currentFeatures.macd !== null && currentFeatures.macd_histogram !== null) {
-      if (currentFeatures.macd_histogram > 0) {
+    if (currentFeatures.macd !== null && currentFeatures.macdHistogram !== null) {
+      if (gt(currentFeatures.macdHistogram, 0)) {
         reasons.push('MACD histogram positive');
         signalScore += 5;
       } else {
@@ -267,11 +267,10 @@ export class ChangeDetectorService {
   }> {
     this.logger.log(`Detecting changes for portfolio ${portfolioId} on ${date.toISOString()}`);
 
-    // Get all active positions
+    // Get all positions
     const positions = await this.prisma.portfolioPosition.findMany({
       where: {
         portfolioId,
-        isActive: true,
       },
       include: {
         symbol: true,
@@ -321,15 +320,23 @@ export class ChangeDetectorService {
     this.logger.log(`Saving ${results.length} decisions for portfolio ${portfolioId}`);
 
     for (const result of results) {
-      // Get position to retrieve buyPrice
+      // Get position to retrieve buyPrice and symbolId
+      const symbolRecord = await this.prisma.symbolUniverse.findFirst({
+        where: {
+          symbol: result.symbol,
+          market: result.market,
+        },
+      });
+
+      if (!symbolRecord) {
+        this.logger.warn(`Symbol ${result.symbol} not found in universe`);
+        continue;
+      }
+
       const position = await this.prisma.portfolioPosition.findFirst({
         where: {
           portfolioId,
-          symbol: {
-            symbol: result.symbol,
-            market: result.market,
-          },
-          isActive: true,
+          symbolId: symbolRecord.id,
         },
       });
 
@@ -339,9 +346,9 @@ export class ChangeDetectorService {
       }
 
       // Calculate stop-loss (simple: 10% below buy price for now)
-      const stopLoss = position.buyPrice * 0.90;
+      const stopLoss = num(position.buyPrice) * 0.90;
 
-      await this.prisma.portfolioDailyDecisions.upsert({
+      await this.prisma.portfolioDecision.upsert({
         where: {
           portfolioId_symbolId_date: {
             portfolioId,
@@ -353,19 +360,21 @@ export class ChangeDetectorService {
           portfolioId,
           symbolId: position.symbolId,
           date,
+          market: result.market,
           signal: result.signal,
           confidence: result.confidence,
           reasons: result.reasons,
           buyPrice: position.buyPrice,
-          stopLoss,
+          currentPrice: 0, // Will be updated by market data sync
+          suggestedStop: stopLoss,
         },
         update: {
           signal: result.signal,
           confidence: result.confidence,
           reasons: result.reasons,
           buyPrice: position.buyPrice,
-          stopLoss,
-          updatedAt: new Date(),
+          currentPrice: 0,
+          suggestedStop: stopLoss,
         },
       });
     }
@@ -380,13 +389,10 @@ export class ChangeDetectorService {
     portfolioId: string,
     date: Date
   ): Promise<any[]> {
-    return this.prisma.portfolioDailyDecisions.findMany({
+    return this.prisma.portfolioDecision.findMany({
       where: {
         portfolioId,
         date,
-      },
-      include: {
-        symbol: true,
       },
       orderBy: {
         confidence: 'desc',
@@ -403,16 +409,16 @@ export class ChangeDetectorService {
     signalCounts: Record<string, number>;
   }> {
     const [totalDecisions, earliest, latest, bySignal] = await Promise.all([
-      this.prisma.portfolioDailyDecisions.count(),
-      this.prisma.portfolioDailyDecisions.findFirst({
+      this.prisma.portfolioDecision.count(),
+      this.prisma.portfolioDecision.findFirst({
         orderBy: { date: 'asc' },
         select: { date: true },
       }),
-      this.prisma.portfolioDailyDecisions.findFirst({
+      this.prisma.portfolioDecision.findFirst({
         orderBy: { date: 'desc' },
         select: { date: true },
       }),
-      this.prisma.portfolioDailyDecisions.groupBy({
+      this.prisma.portfolioDecision.groupBy({
         by: ['signal'],
         _count: true,
       }),
