@@ -10,11 +10,12 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  BadRequestException,
 } from '@nestjs/common';
 import { UniverseService } from './universe.service';
-import { AddSymbolDto, UpdateSymbolDto } from './dto';
+import { AddSymbolDto, UpdateSymbolDto, ImportSymbolsDto } from './dto';
 import { ZodValidationPipe } from './pipes/zod-validation.pipe';
-import { AddSymbolSchema, UpdateSymbolSchema, Market } from '@stocks/shared';
+import { AddSymbolSchema, UpdateSymbolSchema, ImportSymbolsSchema, Market } from '@stocks/shared';
 
 /**
  * Universe Controller
@@ -105,6 +106,45 @@ export class UniverseController {
   async lookupSymbol(@Param('symbol') symbol: string, @Param('market') market: Market) {
     this.logger.log(`GET /universe/symbols/lookup/${symbol}/${market}`);
     return this.universeService.getSymbolBySymbolAndMarket(symbol, market);
+  }
+
+  /**
+   * POST /universe/import/batch
+   * Bulk import symbols from JSON array
+   * 
+   * Body: { symbols: [{ symbol: "AAPL", market: "US" }, ...] }
+   */
+  @Post('import/batch')
+  @HttpCode(HttpStatus.OK)
+  async bulkImport(
+    @Body(new ZodValidationPipe(ImportSymbolsSchema)) dto: ImportSymbolsDto,
+  ) {
+    this.logger.log(`POST /universe/import/batch - ${dto.symbols.length} symbols`);
+    return this.universeService.bulkImport(dto);
+  }
+
+  /**
+   * POST /universe/import/csv
+   * Import symbols from CSV content
+   * 
+   * Body: { csv: "symbol,market\nAAPL,US\nMSFT,US" }
+   * 
+   * Expected CSV format:
+   *   symbol,market
+   *   AAPL,US
+   *   MSFT,US
+   *   TEVA,TASE
+   */
+  @Post('import/csv')
+  @HttpCode(HttpStatus.OK)
+  async importCsv(@Body('csv') csv: string) {
+    this.logger.log('POST /universe/import/csv');
+
+    if (!csv || typeof csv !== 'string') {
+      throw new BadRequestException('CSV content is required in body.csv field');
+    }
+
+    return this.universeService.importFromCsv(csv);
   }
 }
 

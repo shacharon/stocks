@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Market } from '@stocks/shared';
-import { AddSymbolDto, UpdateSymbolDto } from './dto';
+import { AddSymbolDto, UpdateSymbolDto, ImportSymbolsDto, ImportResult } from './dto';
+import { parse } from 'csv-parse/sync';
 
 /**
  * Universe Service
@@ -164,6 +165,114 @@ export class UniverseService {
       active: activeCount,
       inactive: total - activeCount,
     };
+  }
+
+  /**
+   * Bulk import symbols from JSON array
+   * Skips duplicates, reports errors
+   */
+  async bulkImport(dto: ImportSymbolsDto): Promise<ImportResult> {
+    const startTime = Date.now();
+    this.logger.log(`Starting bulk import of ${dto.symbols.length} symbols`);
+
+    const result: ImportResult = {
+      total: dto.symbols.length,
+      added: 0,
+      skipped: 0,
+      errors: [],
+      duration: 0,
+    };
+
+    // Process each symbol
+    for (const symbolData of dto.symbols) {
+      try {
+        // Check if symbol already exists
+        const existing = await this.prisma.symbolUniverse.findUnique({
+          where: {
+            symbol_market: {
+              symbol: symbolData.symbol,
+              market: symbolData.market as Market,
+            },
+          },
+        });
+
+        if (existing) {
+          result.skipped++;
+          this.logger.debug(`Skipped duplicate: ${symbolData.symbol} (${symbolData.market})`);
+          continue;
+        }
+
+        // Create new symbol
+        await this.prisma.symbolUniverse.create({
+          data: {
+            symbol: symbolData.symbol,
+            market: symbolData.market as Market,
+            isActive: true,
+          },
+        });
+
+        result.added++;
+      } catch (error) {
+        result.errors.push({
+          symbol: symbolData.symbol,
+          market: symbolData.market,
+          error: error.message || 'Unknown error',
+        });
+        this.logger.error(`Failed to import ${symbolData.symbol}: ${error.message}`);
+      }
+    }
+
+    result.duration = Date.now() - startTime;
+    this.logger.log(
+      `Bulk import complete: ${result.added} added, ${result.skipped} skipped, ${result.errors.length} errors (${result.duration}ms)`,
+    );
+
+    return result;
+  }
+
+  /**
+   * Import symbols from CSV content
+   * Expected format: symbol,market
+   * Example:
+   *   AAPL,US
+   *   MSFT,US
+   *   TEVA,TASE
+   */
+  async importFromCsv(csvContent: string): Promise<ImportResult> {
+    this.logger.log('Parsing CSV content');
+
+    try {
+      // Parse CSV
+      const records = parse(csvContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+      });
+
+      // Validate and transform records
+      const symbols = records.map((record: any) => {
+        if (!record.symbol || !record.market) {
+          throw new Error(`Invalid CSV format: missing symbol or market in row`);
+        }
+
+        const symbol = record.symbol.toUpperCase().trim();
+        const market = record.market.toUpperCase().trim();
+
+        if (market !== 'US' && market !== 'TASE') {
+          throw new Error(`Invalid market: ${market}. Must be US or TASE`);
+        }
+
+        return { symbol, market };
+      });
+
+      this.logger.log(`Parsed ${symbols.length} symbols from CSV`);
+
+      // Use bulk import
+      return this.bulkImport({ symbols });
+    } catch (error) {
+      this.logger.error(`CSV parsing failed: ${error.message}`);
+      throw new Error(`CSV parsing failed: ${error.message}`);
+    }
   }
 }
 

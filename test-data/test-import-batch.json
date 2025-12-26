@@ -1,0 +1,15 @@
+{
+  "symbols": [
+    { "symbol": "AAPL", "market": "US" },
+    { "symbol": "MSFT", "market": "US" },
+    { "symbol": "GOOGL", "market": "US" },
+    { "symbol": "AMZN", "market": "US" },
+    { "symbol": "TSLA", "market": "US" },
+    { "symbol": "NVDA", "market": "US" },
+    { "symbol": "META", "market": "US" },
+    { "symbol": "NFLX", "market": "US" },
+    { "symbol": "AMD", "market": "US" },
+    { "symbol": "INTC", "market": "US" }
+  ]
+}
+

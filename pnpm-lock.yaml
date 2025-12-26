@@ -100,7 +100,7 @@ importers:
         specifier: ^5.1.0
         version: 5.66.2
       csv-parse:
-        specifier: ^5.5.3
+        specifier: ^5.6.0
         version: 5.6.0
       date-fns:
         specifier: ^3.0.6
