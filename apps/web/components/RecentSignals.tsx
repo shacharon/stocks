@@ -1,13 +1,65 @@
 import Link from 'next/link';
 
-// This will fetch real data from the API
+// Fetch REAL trading signals from the API
 async function getRecentSignals() {
-  // For now, return sample data - we'll connect to API next
-  return [
-    { symbol: 'JPM', signal: 'HOLD', confidence: 46, reason: 'Neutral momentum', market: 'US', date: '2024-12-26' },
-    { symbol: 'AAPL', signal: 'BUY', confidence: 72, reason: 'Strong uptrend', market: 'US', date: '2024-12-25' },
-    { symbol: 'MSFT', signal: 'STRONG_BUY', confidence: 88, reason: 'Breakout pattern', market: 'US', date: '2024-12-25' },
-  ];
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const WORKER_API_URL = process.env.WORKER_API_URL || 'http://localhost:3001';
+    
+    // Try to get real portfolio decisions
+    // First, get all portfolios
+    const portfoliosRes = await fetch(`${WORKER_API_URL}/portfolios`, { cache: 'no-store' });
+    if (!portfoliosRes.ok) throw new Error('No portfolios');
+    
+    const portfolios = await portfoliosRes.json();
+    if (portfolios.length === 0) return [];
+    
+    // Get decisions for the first portfolio
+    const portfolioId = portfolios[0].id;
+    const decisionsRes = await fetch(
+      `${WORKER_API_URL}/changes/portfolio/${portfolioId}/decisions/${today}`,
+      { cache: 'no-store' }
+    );
+    
+    if (!decisionsRes.ok) {
+      // If today has no data, try yesterday
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      
+      const yesterdayRes = await fetch(
+        `${WORKER_API_URL}/changes/portfolio/${portfolioId}/decisions/${yesterdayStr}`,
+        { cache: 'no-store' }
+      );
+      
+      if (!yesterdayRes.ok) return [];
+      
+      const decisions = await yesterdayRes.json();
+      return decisions.slice(0, 5).map((d: any) => ({
+        symbol: d.symbol || 'N/A',
+        signal: d.signal || 'HOLD',
+        confidence: Math.round(parseFloat(d.confidence) || 0),
+        reason: Array.isArray(d.reasons) ? d.reasons[0] : 'Analysis pending',
+        market: d.market || 'US',
+        date: yesterdayStr,
+      }));
+    }
+    
+    const decisions = await decisionsRes.json();
+    
+    // Return top 5 most recent decisions
+    return decisions.slice(0, 5).map((d: any) => ({
+      symbol: d.symbol || 'N/A',
+      signal: d.signal || 'HOLD',
+      confidence: Math.round(parseFloat(d.confidence) || 0),
+      reason: Array.isArray(d.reasons) ? d.reasons[0] : 'Analysis pending',
+      market: d.market || 'US',
+      date: today,
+    }));
+  } catch (error) {
+    console.error('Failed to fetch recent signals:', error);
+    return [];
+  }
 }
 
 export async function RecentSignals() {

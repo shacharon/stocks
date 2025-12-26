@@ -46,10 +46,12 @@ export default async function StocksPage() {
       {/* Symbols Grid */}
       {symbols.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {symbols.map((sym) => (
+          {symbols.map((sym) => {
+            const today = new Date().toISOString().split('T')[0];
+            return (
             <Link
               key={sym.id}
-              href={`/stocks/${sym.symbol}?market=${sym.market}&date=2024-12-26`}
+              href={`/stocks/${sym.symbol}?market=${sym.market}&date=${today}`}
             >
               <div className="bg-gray-900/50 border border-gray-800 hover:border-blue-500/50 rounded-xl p-6 transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/10">
                 <div className="flex items-start justify-between mb-3">
@@ -71,7 +73,8 @@ export default async function StocksPage() {
                 </div>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-12 text-center">

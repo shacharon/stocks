@@ -7,7 +7,7 @@ Write-Host ("=" * 60) -ForegroundColor Gray
 
 # Configuration
 $baseUrl = "http://localhost:3001"
-$testDate = "2024-12-26"
+$testDate = (Get-Date -Format "yyyy-MM-dd")  # Use today's date for REAL EOD data
 
 # Test 1: Health Check
 Write-Host ""

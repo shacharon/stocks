@@ -1,18 +1,79 @@
 import Link from 'next/link';
 
 async function getTopStocks() {
-  // Sample data - will connect to real API
-  return {
-    gainers: [
-      { symbol: 'JPM', price: 243.14, change: 1.08, changePercent: 0.45 },
-      { symbol: 'AAPL', price: 195.50, change: 3.25, changePercent: 1.69 },
-      { symbol: 'MSFT', price: 412.80, change: 5.60, changePercent: 1.37 },
-    ],
-    losers: [
-      { symbol: 'GOOGL', price: 142.30, change: -2.15, changePercent: -1.49 },
-      { symbol: 'TSLA', price: 358.25, change: -4.80, changePercent: -1.32 },
-    ],
-  };
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    const WORKER_API_URL = process.env.WORKER_API_URL || 'http://localhost:3001';
+    
+    // Get all symbols
+    const symbolsRes = await fetch(`${WORKER_API_URL}/universe/symbols`, { cache: 'no-store' });
+    if (!symbolsRes.ok) throw new Error('No symbols');
+    
+    const symbols = await symbolsRes.json();
+    if (symbols.length === 0) return { gainers: [], losers: [] };
+    
+    // Get features for each symbol (today and yesterday to calculate change)
+    const stockChanges: any[] = [];
+    
+    for (const sym of symbols.slice(0, 10)) { // Limit to 10 symbols
+      try {
+        // Try today first, then yesterday
+        let todayRes = await fetch(
+          `${WORKER_API_URL}/features/${sym.symbol}/${sym.market}/${today}`,
+          { cache: 'no-store' }
+        );
+        
+        if (!todayRes.ok) {
+          todayRes = await fetch(
+            `${WORKER_API_URL}/features/${sym.symbol}/${sym.market}/${yesterdayStr}`,
+            { cache: 'no-store' }
+          );
+        }
+        
+        if (!todayRes.ok) continue;
+        
+        const todayData = await todayRes.json();
+        if (todayData.error) continue;
+        
+        const price = parseFloat(todayData.closePrice);
+        const sma20 = todayData.sma20 ? parseFloat(todayData.sma20) : null;
+        
+        if (sma20) {
+          const change = price - sma20;
+          const changePercent = (change / sma20) * 100;
+          
+          stockChanges.push({
+            symbol: sym.symbol,
+            price,
+            change,
+            changePercent,
+          });
+        }
+      } catch (err) {
+        // Skip symbols with errors
+        continue;
+      }
+    }
+    
+    if (stockChanges.length === 0) {
+      return { gainers: [], losers: [] };
+    }
+    
+    // Sort by change percent
+    stockChanges.sort((a, b) => b.changePercent - a.changePercent);
+    
+    return {
+      gainers: stockChanges.filter(s => s.changePercent > 0).slice(0, 3),
+      losers: stockChanges.filter(s => s.changePercent < 0).slice(-3).reverse(),
+    };
+  } catch (error) {
+    console.error('Failed to fetch top stocks:', error);
+    return { gainers: [], losers: [] };
+  }
 }
 
 export async function TopStocks() {

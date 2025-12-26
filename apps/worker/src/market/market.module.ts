@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MarketController } from './market.controller';
 import { MarketService } from './market.service';
-import { MockProvider, StooqProvider } from './providers';
+import { MockProvider, StooqProvider, AlphaVantageProvider } from './providers';
 import { PrismaModule } from '../prisma/prisma.module';
 
 /**
@@ -9,7 +9,7 @@ import { PrismaModule } from '../prisma/prisma.module';
  * Manages market data fetching and storage
  * 
  * Features:
- * - Multiple provider support (Mock, Stooq)
+ * - Multiple provider support (Mock, Stooq, Alpha Vantage)
  * - Automatic provider selection by market
  * - Bulk sync for all symbols
  * - Data statistics
@@ -17,7 +17,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 @Module({
   imports: [PrismaModule],
   controllers: [MarketController],
-  providers: [MarketService, MockProvider, StooqProvider],
+  providers: [MarketService, MockProvider, StooqProvider, AlphaVantageProvider],
   exports: [MarketService],
 })
 export class MarketModule {}

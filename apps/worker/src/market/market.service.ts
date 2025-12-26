@@ -1,6 +1,6 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { MockProvider, StooqProvider } from './providers';
+import { MockProvider, StooqProvider, AlphaVantageProvider } from './providers';
 import { Market, SyncResult, SyncSummary } from '@stocks/shared';
 
 /**
@@ -16,11 +16,13 @@ export class MarketService {
     private prisma: PrismaService,
     private mockProvider: MockProvider,
     private stooqProvider: StooqProvider,
+    private alphaVantageProvider: AlphaVantageProvider,
   ) {
-    // Register providers
+    // Register providers (order matters - first provider is tried first)
     this.providers = new Map();
-    this.providers.set('mock', mockProvider);
-    this.providers.set('stooq', stooqProvider);
+    this.providers.set('alphavantage', alphaVantageProvider);  // Try Alpha Vantage first
+    this.providers.set('stooq', stooqProvider);                // Then Stooq
+    this.providers.set('mock', mockProvider);                  // Mock as fallback
     
     this.logger.log(`Registered ${this.providers.size} market data providers`);
   }
@@ -29,7 +31,7 @@ export class MarketService {
    * Sync market data for all symbols in the universe
    * @param date - Target date (defaults to today)
    * @param lookbackDays - Number of days to fetch (default 200)
-   * @param providerName - Provider to use (default: stooq for US, mock for TASE)
+   * @param providerName - Provider to use (default: alphavantage for US, mock for TASE)
    */
   async syncMarketData(
     date?: Date,
@@ -69,7 +71,8 @@ export class MarketService {
     const results: SyncResult[] = [];
 
     // Sync each symbol
-    for (const symbolData of symbols) {
+    for (let i = 0; i < symbols.length; i++) {
+      const symbolData = symbols[i];
       try {
         const result = await this.syncSymbol(
           symbolData.symbol,
@@ -89,6 +92,12 @@ export class MarketService {
           success: false,
           error: error.message,
         });
+      }
+
+      // Add delay between requests to respect API rate limits (Alpha Vantage: 1 req/sec)
+      if (i < symbols.length - 1) {
+        this.logger.debug(`Waiting 1.2s before next request (API rate limit)...`);
+        await new Promise(resolve => setTimeout(resolve, 1200));
       }
     }
 
@@ -207,7 +216,8 @@ export class MarketService {
 
     // Auto-select provider based on market
     if (market === 'US') {
-      return this.stooqProvider;
+      // Try Alpha Vantage first (best data quality), fallback to Stooq
+      return this.alphaVantageProvider;
     } else if (market === 'TASE') {
       return this.mockProvider; // TASE provider not implemented yet
     }

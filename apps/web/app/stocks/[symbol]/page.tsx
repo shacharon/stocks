@@ -16,7 +16,7 @@ interface PageProps {
 export default async function StockDetailPage({ params, searchParams }: PageProps) {
   const symbol = params.symbol.toUpperCase();
   const market = searchParams.market || 'US';
-  const date = searchParams.date || '2024-12-26';
+  const date = searchParams.date || new Date().toISOString().split('T')[0]; // Use today by default
 
   let features = null;
   let error = null;
