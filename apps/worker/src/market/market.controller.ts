@@ -26,8 +26,9 @@ export class MarketController {
    * 
    * Query params:
    * - date: Target date (YYYY-MM-DD, defaults to today)
-   * - lookback: Number of days to fetch (default 200)
+   * - lookback: Number of days to fetch (default 1 for daily EOD sync)
    * - provider: Provider name (optional, auto-selects by market)
+   * - force: Force refresh, bypass cache (default false)
    */
   @Post('sync')
   @HttpCode(HttpStatus.OK)
@@ -35,8 +36,11 @@ export class MarketController {
     @Query('date') dateStr?: string,
     @Query('lookback') lookbackStr?: string,
     @Query('provider') provider?: string,
+    @Query('force') forceStr?: string,
   ) {
-    this.logger.log(`POST /market/sync - date: ${dateStr}, lookback: ${lookbackStr}, provider: ${provider}`);
+    this.logger.log(
+      `POST /market/sync - date: ${dateStr}, lookback: ${lookbackStr}, provider: ${provider}, force: ${forceStr}`
+    );
 
     // Parse date
     let date: Date | undefined;
@@ -47,8 +51,8 @@ export class MarketController {
       }
     }
 
-    // Parse lookback
-    let lookback = 200;
+    // Parse lookback (default to 1 for daily EOD sync)
+    let lookback = 1;
     if (lookbackStr) {
       lookback = parseInt(lookbackStr, 10);
       if (isNaN(lookback) || lookback < 1 || lookback > 1000) {
@@ -56,7 +60,10 @@ export class MarketController {
       }
     }
 
-    return this.marketService.syncMarketData(date, lookback, provider);
+    // Parse force flag
+    const force = forceStr === 'true' || forceStr === '1';
+
+    return this.marketService.syncMarketData(date, lookback, provider, force);
   }
 
   /**

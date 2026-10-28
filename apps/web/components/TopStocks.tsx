@@ -1,51 +1,48 @@
-import Link from 'next/link';
+import Link from "next/link";
+import { formatDateISO, getLastTradingDay } from "@/lib/date-utils";
 
 async function getTopStocks() {
   try {
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    
-    const WORKER_API_URL = process.env.WORKER_API_URL || 'http://localhost:3001';
-    
+    // Use last trading day
+    const tradingDay = getLastTradingDay();
+    const tradingDateStr = formatDateISO(tradingDay);
+
+    const WORKER_API_URL =
+      process.env.WORKER_API_URL || "http://localhost:3001";
+
     // Get all symbols
-    const symbolsRes = await fetch(`${WORKER_API_URL}/universe/symbols`, { cache: 'no-store' });
-    if (!symbolsRes.ok) throw new Error('No symbols');
-    
+    const symbolsRes = await fetch(`${WORKER_API_URL}/universe/symbols`, {
+      cache: "no-store",
+    });
+    if (!symbolsRes.ok) throw new Error("No symbols");
+
     const symbols = await symbolsRes.json();
     if (symbols.length === 0) return { gainers: [], losers: [] };
-    
-    // Get features for each symbol (today and yesterday to calculate change)
+
+    // Get features for each symbol
     const stockChanges: any[] = [];
-    
-    for (const sym of symbols.slice(0, 10)) { // Limit to 10 symbols
+
+    for (const sym of symbols.slice(0, 10)) {
+      // Limit to 10 symbols
       try {
-        // Try today first, then yesterday
-        let todayRes = await fetch(
-          `${WORKER_API_URL}/features/${sym.symbol}/${sym.market}/${today}`,
-          { cache: 'no-store' }
+        // Use last trading day
+        const res = await fetch(
+          `${WORKER_API_URL}/features/${sym.symbol}/${sym.market}/${tradingDateStr}`,
+          { cache: "no-store" }
         );
-        
-        if (!todayRes.ok) {
-          todayRes = await fetch(
-            `${WORKER_API_URL}/features/${sym.symbol}/${sym.market}/${yesterdayStr}`,
-            { cache: 'no-store' }
-          );
-        }
-        
-        if (!todayRes.ok) continue;
-        
-        const todayData = await todayRes.json();
-        if (todayData.error) continue;
-        
-        const price = parseFloat(todayData.closePrice);
-        const sma20 = todayData.sma20 ? parseFloat(todayData.sma20) : null;
-        
+
+        if (!res.ok) continue;
+
+        const data = await res.json();
+        if (data.error) continue;
+
+        const price = parseFloat(data.closePrice);
+        const sma20 = data.sma20 ? parseFloat(data.sma20) : null;
+
         if (sma20) {
           const change = price - sma20;
           const changePercent = (change / sma20) * 100;
-          
+
           stockChanges.push({
             symbol: sym.symbol,
             price,
@@ -58,20 +55,23 @@ async function getTopStocks() {
         continue;
       }
     }
-    
+
     if (stockChanges.length === 0) {
       return { gainers: [], losers: [] };
     }
-    
+
     // Sort by change percent
     stockChanges.sort((a, b) => b.changePercent - a.changePercent);
-    
+
     return {
-      gainers: stockChanges.filter(s => s.changePercent > 0).slice(0, 3),
-      losers: stockChanges.filter(s => s.changePercent < 0).slice(-3).reverse(),
+      gainers: stockChanges.filter((s) => s.changePercent > 0).slice(0, 3),
+      losers: stockChanges
+        .filter((s) => s.changePercent < 0)
+        .slice(-3)
+        .reverse(),
     };
   } catch (error) {
-    console.error('Failed to fetch top stocks:', error);
+    console.error("Failed to fetch top stocks:", error);
     return { gainers: [], losers: [] };
   }
 }
@@ -129,19 +129,21 @@ function StockRow({
   changePercent: number;
 }) {
   const isPositive = change >= 0;
-  const colorClass = isPositive ? 'text-green-400' : 'text-red-400';
-  const bgClass = isPositive ? 'bg-green-500/5' : 'bg-red-500/5';
+  const colorClass = isPositive ? "text-green-400" : "text-red-400";
+  const bgClass = isPositive ? "bg-green-500/5" : "bg-red-500/5";
 
   return (
     <Link href={`/stocks/${symbol}`}>
-      <div className={`${bgClass} border border-gray-800 hover:border-gray-700 rounded-lg p-3 transition-all hover:scale-[1.02]`}>
+      <div
+        className={`${bgClass} border border-gray-800 hover:border-gray-700 rounded-lg p-3 transition-all hover:scale-[1.02]`}
+      >
         <div className="flex items-center justify-between">
           <div className="font-bold">{symbol}</div>
           <div className="text-right">
             <div className="font-medium">${price.toFixed(2)}</div>
             <div className={`text-sm ${colorClass}`}>
-              {isPositive ? '+' : ''}
-              {change.toFixed(2)} ({isPositive ? '+' : ''}
+              {isPositive ? "+" : ""}
+              {change.toFixed(2)} ({isPositive ? "+" : ""}
               {changePercent.toFixed(2)}%)
             </div>
           </div>
@@ -150,4 +152,3 @@ function StockRow({
     </Link>
   );
 }
-

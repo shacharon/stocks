@@ -9,13 +9,18 @@ echo.
 
 cd /d C:\dev\stocks
 
+echo Killing all Node.js processes...
+taskkill /F /IM node.exe >nul 2>&1
+
 echo Stopping Docker containers...
 pnpm dev:down
 
 echo.
-echo All services stopped!
+echo Waiting for ports to free up...
+timeout /t 3 /nobreak >nul
+
 echo.
-echo Note: You may need to manually close the terminal windows.
+echo ✅ All services stopped!
 echo.
 pause
 

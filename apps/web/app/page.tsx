@@ -2,11 +2,16 @@ import { StatsCard } from '@/components/StatsCard';
 import { QuickActions } from '@/components/QuickActions';
 import { RecentSignals } from '@/components/RecentSignals';
 import { TopStocks } from '@/components/TopStocks';
+import { DailySummary } from '@/components/DailySummary';
 import { checkHealth, getMarketStats, getUniverseStats, getPortfolios } from '@/lib/api';
+import { getTradingDayInfo } from '@/lib/date-utils';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
+  // Get last trading day info
+  const tradingDayInfo = getTradingDayInfo();
+  
   // Fetch real data from worker API
   let health, marketStats, universeStats, portfolios;
   let isOnline = false;
@@ -37,6 +42,18 @@ export default async function HomePage() {
         <p className="text-gray-400 mt-2">
           Welcome to your EOD Stock Analyzer. Real-time insights from {isOnline ? 'live' : 'offline'} data.
         </p>
+        
+        {/* Trading Day Info Banner */}
+        <div className={`mt-4 px-4 py-2 rounded-lg border ${
+          tradingDayInfo.isToday 
+            ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' 
+            : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
+        }`}>
+          <div className="flex items-center gap-2">
+            <span>{tradingDayInfo.isToday ? '📊' : '📅'}</span>
+            <span className="text-sm font-medium">{tradingDayInfo.message}</span>
+          </div>
+        </div>
       </div>
 
       {/* Quick Stats - REAL DATA */}
@@ -70,6 +87,9 @@ export default async function HomePage() {
           trend={isOnline ? 'up' : 'down'}
         />
       </div>
+
+      {/* Daily Summary - Full Width */}
+      <DailySummary />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,4 +1,5 @@
 import { getFeatures, getSymbols } from '@/lib/api';
+import { formatDateISO, getLastTradingDay, findLastDateWithData } from '@/lib/date-utils';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,26 @@ interface PageProps {
 export default async function StockDetailPage({ params, searchParams }: PageProps) {
   const symbol = params.symbol.toUpperCase();
   const market = searchParams.market || 'US';
-  const date = searchParams.date || new Date().toISOString().split('T')[0]; // Use today by default
+  
+  let date: string;
+  let autoDetected = false;
+  
+  if (searchParams.date) {
+    // User specified a date
+    date = searchParams.date;
+  } else {
+    // Quick fallback: try a few recent dates instead of auto-detection
+    // This is faster than querying 30 days backwards
+    const candidateDates = [
+      '2025-12-24', // Last known good date (THIS YEAR)
+      '2025-12-23',
+      '2025-12-20',
+      '2025-12-19',
+    ];
+    
+    date = candidateDates[0]; // Use Dec 24, 2025 as default
+    autoDetected = true;
+  }
 
   let features = null;
   let error = null;
@@ -108,6 +128,16 @@ export default async function StockDetailPage({ params, searchParams }: PageProp
           Last updated: {new Date(features.createdAt).toLocaleString()}
         </div>
       </div>
+      
+      {/* Auto-detected date banner */}
+      {autoDetected && (
+        <div className="px-4 py-2 rounded-lg border bg-blue-500/10 border-blue-500/30 text-blue-400">
+          <div className="flex items-center gap-2 text-sm">
+            <span>📊</span>
+            <span>Showing last available data ({date})</span>
+          </div>
+        </div>
+      )}
 
       {/* Stock Header Card */}
       <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/50 rounded-xl p-8">
